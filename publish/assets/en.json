@@ -16,7 +16,7 @@
     "Data_index_completed": "completed",
     "Data_index_initializing_publish": "Initializing the publish data...",
     "Data_index_fields": "Fields",
-    "Data_index_chooseFieldDescription": "Define the fields which be indexed",
+    "Data_index_chooseFieldDescription": "Define the fields which will be indexed",
     "Data_index": "Data Index",
     "Data_index_add": "Add",
     "Data_index_remove": "Remove",

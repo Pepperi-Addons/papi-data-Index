@@ -277,11 +277,9 @@ async function setPublishCodeJob(UI_adalRecord: AddonData, papiClient: PapiClien
     var codeJobUUID = UI_adalRecord["PublishCodeJobUUID"];
     var codeJob;
 
-    if (codeJobUUID) {
-        var codeJobs = await papiClient.codeJobs.get(codeJobUUID);
-        if (codeJobs.length > 0)
-            codeJob = codeJobs[0];
-
+    if (codeJobUUID) 
+    {
+        codeJob = await papiClient.codeJobs.get(codeJobUUID);
     }
     console.log(`Index rebuild - setting the publish job to run with cron  ${cronExpression}`);
 

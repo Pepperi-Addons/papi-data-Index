@@ -12,7 +12,8 @@
         "assets-server": "http-server ./src/ -p 4300 -d --cors",
         "test": "ng test",
         "lint": "ng lint",
-        "e2e": "ng e2e"
+        "e2e": "ng e2e",
+        "start": "ng serve --port 4400 --live-reload=false"
     },
     "private": true,
     "dependencies": {

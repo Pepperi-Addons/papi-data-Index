@@ -120,9 +120,9 @@ export class DataIndexComponent implements OnInit {
     }
 
     private setInterval() {
-        var id = setInterval(() => {
-            this.refreshProgressIndicator();
-        }, 10000); // 10 secs is the best time to refresh - no less
+        var intervalId = setInterval(() => {
+            this.refreshProgressIndicator(intervalId);
+        }, 10000); // 10 secs is the minimum best time to refresh
     }
 
     private SetTransactionLinesUIData() {
@@ -401,6 +401,7 @@ export class DataIndexComponent implements OnInit {
     private delay = true;
 
     publishClicked(){
+
         //get the fields to save
         var data = {
             all_activities_fields: this.getIndexTypeFieldsToExport("all_activities"),
@@ -413,36 +414,44 @@ export class DataIndexComponent implements OnInit {
         dialogRef.afterClosed().subscribe(dialogResult => {
             if(dialogResult)
             {
+                this.rebuildInProgress = true;
+
                 if(dialogResult.runType == "2"){ // type 2 is 'run at' option of the publish
                     //add run time to saved object
-                    var parts = dialogResult.runTime.split(':');
-                    var hour = parseInt(parts[0]);
-                    var minutes = parseInt(parts[1]);
-                    let date: Date = new Date();
-    
-                    if (hour == 0 || date.getHours() > hour) // if midnight was chosen or hour that was passed - run in the next day
-                    {
-                        date.setDate(date.getDate() + 1);
-                    }
-                    date.setHours(hour);
-                    date.setMinutes(minutes);
-
-                    data.RunTime = date.toISOString();
+                    data.RunTime = this.getFormattedRunTime(dialogResult.runTime);
                 }
     
                 this.dataIndexService.publish(data,(result)=>{
+                    this.indexingFaild = false;
                     this.progressIndicator = this.translate.instant('Data_index_initializing_publish');
                     this.setInterval();
                 })
             }
-            
-            
+            else
+            {
+                this.rebuildInProgress = false;
+            }
         });
-
 
     }
 
-    private refreshProgressIndicator() {
+    private getFormattedRunTime(runTime:any ) {
+        var parts = runTime.split(':');
+        var hour = parseInt(parts[0]);
+        var minutes = parseInt(parts[1]);
+        let date: Date = new Date();
+
+        if (hour == 0 || date.getHours() > hour) // if midnight was chosen or hour that was passed - run in the next day
+        {
+            date.setDate(date.getDate() + 1);
+        }
+        date.setHours(hour);
+        date.setMinutes(minutes);
+
+        return date.toISOString();
+    }
+
+    private refreshProgressIndicator(intervalID) {
 
         this.dataIndexService.getUIData((uiData: any) => {
 
@@ -451,6 +460,9 @@ export class DataIndexComponent implements OnInit {
             var progressStatus = uiData['ProgressData']['Status'];
 
             this.rebuildInProgress = progressStatus == 'InProgress';
+
+            if(!this.rebuildInProgress)
+                clearInterval(intervalID);
 
             this.setProgressIndicator(uiData['ProgressData']);
 
