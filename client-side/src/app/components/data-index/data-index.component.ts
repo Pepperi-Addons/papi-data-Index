@@ -58,6 +58,9 @@ export class DataIndexComponent implements OnInit {
 
     fieldsNumberLimit = 20;
 
+    intervalCounter = 0;// it is for delay on updating the progress by the async publish, need to wait a vit more then 10 sec
+
+
     constructor(
         public dataIndexService: DataIndexService,
         private translate: TranslateService,
@@ -120,6 +123,7 @@ export class DataIndexComponent implements OnInit {
     }
 
     private setInterval() {
+        this.intervalCounter=0;
         var intervalId = setInterval(() => {
             this.refreshProgressIndicator(intervalId);
         }, 10000); // 10 secs is the minimum best time to refresh
@@ -290,6 +294,7 @@ export class DataIndexComponent implements OnInit {
 
     private clearProgressIndicator() {
 
+        this.rebuildInProgress = false;
         if(this.progressIndicator != ""){
             this.indexingFaild = false;
             this.indexingError = "";
@@ -334,6 +339,7 @@ export class DataIndexComponent implements OnInit {
                     this.translate.instant("Data_index_delete_body"),
                     this.translate.instant("Data_index_Confirm"),
                     () =>{ 
+                        this.rebuildInProgress = true;
                         this.dataIndexService.deleteIndex((res)=>{
                             if(res["success"] == true){
 
@@ -343,7 +349,10 @@ export class DataIndexComponent implements OnInit {
                                     this.translate.instant("Data_index_delete_index"),
                                     message,
                                     this.translate.instant("Data_index_OK"),
-                                    () =>{this.clearProgressIndicator();}, 
+                                    () =>{
+                                        this.rebuildInProgress = false;
+                                        this.clearProgressIndicator();
+                                    }, 
                                     false
                                     );
                             }
@@ -458,15 +467,17 @@ export class DataIndexComponent implements OnInit {
             this.uiData = uiData;
 
             var progressStatus = uiData['ProgressData']['Status'];
+            var progressData = uiData['ProgressData'];
 
-            this.rebuildInProgress = progressStatus == 'InProgress';
+            this.rebuildInProgress = progressStatus == 'InProgress' ? true : (!progressData["RunTime"] && this.intervalCounter < 1); //the counter check is for caces the async publish didn't update the status yet (there is an old status from lat publish or it is empty on first publish) so we will wait two intervals 
+        
+            this.setProgressIndicator(progressData);
 
             if(!this.rebuildInProgress)
                 clearInterval(intervalID);
 
-            this.setProgressIndicator(uiData['ProgressData']);
-
             this.menuOptions = [{ key: 'delete_index', text: this.translate.instant('Data_index_delete_index') ,disabled:this.rebuildInProgress}];
+            this.intervalCounter++;
 
         });
        
@@ -487,7 +498,5 @@ export class DataIndexComponent implements OnInit {
         return fieldsToExport;
 
     }
-
-
     
 }
