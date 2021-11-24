@@ -71,8 +71,8 @@
                                 (valueChange)="onTypeChange($event,i,'transaction_lines')" [options]="transaction_lines_types" class="pull-left flip" [value]="field.type">
                             </pep-select>
                             <pep-select [disabled]="field.default" [showTitle]="false" [emptyOption]="true"  
-                                (valueChange)="onApiNameChange($event,i,'transaction_lines')" [options]="transaction_lines_apiNames[field.type]" 
-                                class="pull-left flip"  [value]="field.apiName">
+                                (valueChange)="onApiNameChange($event,i,'transaction_lines')"
+                                 [options]="transaction_lines_apiNames[field.type]"  class="pull-left flip"  [value]="field.apiName">
                             </pep-select>
                             <button mat-button *ngIf= "fields['transaction_lines'].length != 1 && !field.default" class="pep-button icon-button md strong caution ellipsis pull-left flip" (click)="deleteFieldRow(i,'transaction_lines')">
                                 <mat-icon>

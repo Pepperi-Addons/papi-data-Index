@@ -170,15 +170,18 @@ export class DataIndexComponent implements OnInit {
         this.defaultFields[indexType].forEach(field => {
             this.addFieldToTabUIFields(field, indexType, true);
         });
+        if(this.uiData["Saved_Fields"]){
+            this.uiData["Saved_Fields"][indexType].forEach(field => {
+                if (!this.defaultFields[indexType].includes(field.FieldID)) { // default fields will be added separetley to the UI arr
+                    this.addFieldToTabUIFields(field.FieldID, indexType, false);
+                }
+            });
+        }
 
-        this.uiData[`${indexType}_saved_fields`].forEach(field => {
-            if (!this.defaultFields[indexType].includes(field)) { // default fields will be added separetley to the UI arr
-                this.addFieldToTabUIFields(field, indexType, false);
-            }
-        });
+
     }
 
-    private addFieldToTabUIFields(field: string, indexType: string, defaultField: boolean) {
+    private addFieldToTabUIFields(field:string, indexType: string, defaultField: boolean) {
         if (field.includes(".")) { // ref field
             var lastDotIndex = field.lastIndexOf('.');
             var prefix = field.substring(0, lastDotIndex);
@@ -228,9 +231,12 @@ export class DataIndexComponent implements OnInit {
         }
         else
         {
+
+            res = this.getFieldObj(type, apiName);
+/*
             res = this.typesFields[type].filter(field => {
                 return field.key === apiName;
-            });
+            });*/
         }
         return res && res.length > 0? res[0]:undefined;
     }
@@ -242,6 +248,7 @@ export class DataIndexComponent implements OnInit {
     }
 
     private setProgressIndicator(progressData: any) {
+        this.progressIndicator = "";
         var progressStatus = progressData["Status"];
 
         if (progressData["RunTime"]) {
@@ -311,10 +318,7 @@ export class DataIndexComponent implements OnInit {
             let key = field.key;
             if(!map.has(key)){
                 map.set(key, true);   
-                distinctFields.push({
-                     key: key,
-                    value: field.value
-                });
+                distinctFields.push(field);
             }
         }
 
@@ -413,9 +417,8 @@ export class DataIndexComponent implements OnInit {
 
         //get the fields to save
         var data = {
-            all_activities_fields: this.getIndexTypeFieldsToExport("all_activities"),
-            transaction_lines_fields: this.getIndexTypeFieldsToExport("transaction_lines"),
-            RunTime:null
+            Fields: this.getIndexTypeFieldsToExport(),
+             RunTime:null
         };
 
         //open dialog
@@ -483,20 +486,33 @@ export class DataIndexComponent implements OnInit {
        
     }
 
-    private getIndexTypeFieldsToExport(indexType: string) {
-        var fieldsToExport : string[] = [];
-        this.fields[indexType].forEach(fieldObj => {
-            var field = fieldObj.apiName;
-            if (field != null) { // igmoe unselected api names in the UI
-                if (fieldObj.type != indexType) { // I made the key to be always the full prefix - Account in all activities and Transaction.Account in transaction_lines
-                    field = `${fieldObj.type}.${field}`;
+    private getIndexTypeFieldsToExport() {
+        var TypeToFieldsToExport= {};
+        for (let indexType in this.fields) {
+            var fieldsToExport : {FieldID:string, UIType:string}[] = [];
+            this.fields[indexType].forEach(fieldObj => {
+                var field = fieldObj.apiName;
+                var type = indexType;
+                if (field != null) { // igmoe unselected api names in the UI
+                    if (fieldObj.type != indexType) { // I made the key to be always the full prefix - Account in all activities and Transaction.Account in transaction_lines
+                        field = `${fieldObj.type}.${field}`;
+                        type = fieldObj.type;
+                        if(type.includes(".")){// e.g Transaction.Agent
+                            type = type.substring(type.lastIndexOf('.')+1) // take the Agent
+                        } 
+                    }
+
+                    var fieldObj = this.getFieldFromFieldsType(type, fieldObj.apiName)
+                    if(fieldObj)
+                        fieldsToExport.push({FieldID:field, UIType:fieldObj.uiType});
                 }
-                fieldsToExport.push(field);
+            });
+            
+            TypeToFieldsToExport[indexType] = fieldsToExport
             }
-        });
 
-        return fieldsToExport;
-
+            return TypeToFieldsToExport;
+       
     }
     
 }

@@ -14,14 +14,14 @@ export async function get_ui_data(client: Client, request: Request) {//get the s
 
     var UI_adalRecord = await CommonMethods.getDataIndexUIAdalRecord(papiClient,client);
 
+    var ui_saved_fields =  UI_adalRecord["Fields"];
     var ui_data = {
         Fields: await getFields(papiClient), //the fields for the dropdowns and the defaultFields - the format = > {TypesFields: {Transaction:[],Account:[], transaction_lines:[]....}, DataIndexTypeDefaultFields: {all_activities:[], transaction_lines:[]}},
-        all_activities_saved_fields : UI_adalRecord["all_activities_fields"]?  UI_adalRecord["all_activities_fields"] :[],
-        transaction_lines_saved_fields: UI_adalRecord["transaction_lines_fields"] ? UI_adalRecord["transaction_lines_fields"] :[],
+        Saved_Fields : ui_saved_fields,
         ProgressData: {}
     }
 
-    if(UI_adalRecord["all_activities_fields"]) // if not exist - it is probably the first time the get was called  
+    if(ui_saved_fields) // if not exist - it is probably the first time the get was called  
     {
         if(UI_adalRecord["RunTime"])
         {// if we have run time  - the progress indicator should be the time of the run (the code job should set it to null)
@@ -43,15 +43,15 @@ async function getFields(papiClient: PapiClient) { // get the needed fields for 
 
     for(var t in types){
         var objectType = types[t];
-        var fieldsObjects :{key:string,value:string}[] = [];
+        var fieldsObjects :{key:string,value:string, uiType:any}[] = [];
         var resource = CommonMethods.getAPiResourcesByObjectTypeName(types[t])[0];
 
         var fields = await CommonMethods.getTypesFields(papiClient,resource);
 
         fields.forEach(fieldObj => {
-            if (checkIfFieldIsValid(fieldObj,objectType)) //GuidReferenceType
+            if (checkIfFieldIsValid(fieldObj,objectType))
             {
-                fieldsObjects.push({key:fieldObj.FieldID, value:fieldObj.Label}); // the key val is the format of the pwp-select data of the UI
+                fieldsObjects.push({key:fieldObj.FieldID, value:fieldObj.Label, uiType:fieldObj.UIType.Name}); // the key val is the format of the pwp-select data of the UI
             }
         });
         
@@ -322,8 +322,8 @@ export async function publish_job(client: Client, request: Request) {
     try
     {
         var adal_ui_data = await CommonMethods.getDataIndexUIAdalRecord(papiClient,client);
-        var al_needRebuild = await checkIfDataIndexNeedRebuild(papiClient, client, "all_activities",adal_ui_data["all_activities_fields"],result.resultObject);
-        var tl_needRebuild = await checkIfDataIndexNeedRebuild(papiClient, client, "transaction_lines",adal_ui_data["transaction_lines_fields"] ,result.resultObject);
+        var al_needRebuild = await checkIfDataIndexNeedRebuild(papiClient, client, "all_activities",adal_ui_data["Fields"]["all_activities"].map(f=>f.FieldID),result.resultObject);
+        var tl_needRebuild = await checkIfDataIndexNeedRebuild(papiClient, client, "transaction_lines",adal_ui_data["Fields"]["transaction_lines"].map(f=>f.FieldID) ,result.resultObject);
 
         // need to start a rebuild according to the cases
         adal_ui_data["FullPublish"] = false; // for the polling using the UI - we need to know what polling to call
@@ -403,13 +403,13 @@ export async function save_ui_data(client: Client, request: Request) { //save th
     var papiClient = CommonMethods.getPapiClient(client);
 
     var uiData =  request.body;
-    var all_activities_fields = CommonMethods.addDefaultFieldsByType(uiData["all_activities_fields"],"all_activities");
-    var transaction_lines_fields = CommonMethods.addDefaultFieldsByType(uiData["transaction_lines_fields"],"transaction_lines");
-
+    var ui_fields = uiData["Fields"];
     var ui_adalRecord = await CommonMethods.getDataIndexUIAdalRecord(papiClient,client);
 
-    ui_adalRecord["all_activities_fields"] = all_activities_fields.filter(CommonMethods.distinct);
-    ui_adalRecord["transaction_lines_fields"] = transaction_lines_fields.filter(CommonMethods.distinct);
+    ui_adalRecord["Fields"]= {
+        "all_activities": [...new Map(ui_fields["all_activities"].map(item => [item["FieldID"], item])).values()],
+        "transaction_lines": [...new Map(ui_fields["transaction_lines"].map(item => [item["FieldID"], item])).values()]
+    }
     ui_adalRecord["RunTime"] = null;
 
     if(ui_adalRecord["FullPublish"] == undefined){
@@ -418,7 +418,7 @@ export async function save_ui_data(client: Client, request: Request) { //save th
 
     if (uiData["RunTime"]) { // if not set or null - means run now
 
-        console.log(`save_ui_data - now date is: ${new Date()}, runTime  is: ${uiData["RunTime"]}`);
+        console.log(`save_ui_data - now date is: ${new Date()}, runTime is: ${uiData["RunTime"]}`);
 
         ui_adalRecord["RunTime"] = uiData["RunTime"];
     }

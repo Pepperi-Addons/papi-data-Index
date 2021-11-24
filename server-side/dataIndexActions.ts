@@ -34,7 +34,7 @@ export  class DataIndexActions{
         {
             var UIAdalRecord = await CommonMethods.getDataIndexUIAdalRecord(this.papiClient,this.client);
     
-            fieldsToExport = UIAdalRecord[`${this.dataIndexType}_fields`]? UIAdalRecord[`${this.dataIndexType}_fields`] : [];
+            fieldsToExport = UIAdalRecord["Fields"][this.dataIndexType]? UIAdalRecord["Fields"][this.dataIndexType].map(f=>f.FieldID) : [];
             console.log(`Start ${this.dataIndexType} rebuild function`);
     
             //Add defaultFields to fieldToExport
