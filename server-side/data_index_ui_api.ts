@@ -365,7 +365,7 @@ export async function publish_job(client: Client, request: Request) {
     }
 
 
-    
+
     return result;
 }
 
