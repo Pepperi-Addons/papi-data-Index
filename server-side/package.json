@@ -29,6 +29,7 @@
     "dependencies": {
         "@pepperi-addons/debug-server": "0.0.30",
         "@pepperi-addons/papi-sdk": "^1.19.3",
+        "@pepperi-addons/system-addon-utils": "^1.0.4",
         "@types/node-fetch": "^2.5.7",
         "jwt-decode": "^2.2.0",
         "node-fetch": "^2.6.1"
