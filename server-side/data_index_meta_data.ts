@@ -19,7 +19,6 @@ export async function transaction_lines_schema(client: Client, request: Request)
     return await getDataIndexSchema(client, "transaction_lines");
 }
 
-
 /////function to remove - I change the interface, need to remove after a few versios
 async function getDataIndexFields(client: Client, dataIndexType: string) {
     var papiClient = CommonMethods.getPapiClient(client);
@@ -36,8 +35,6 @@ async function getDataIndexFields(client: Client, dataIndexType: string) {
     return { Fields: fields };
 }
 
-
-
 async function getDataIndexSchema(client: Client, dataIndexType: string) {
     var papiClient = CommonMethods.getPapiClient(client);
     
@@ -48,28 +45,26 @@ async function getDataIndexSchema(client: Client, dataIndexType: string) {
         if (ui_adalRecord[`${dataIndexType}_fields`]) {
         savedFields = ui_adalRecord[`${dataIndexType}_fields`];
         }
-
+    
     let fields = schema.filter(f=>savedFields.includes(f.FieldID))
 
+    await SaveOptionalValuesFromElastic(client, fields, dataIndexType)
+
     return { Fields: fields };
-
-    
 }
-
 
 function getFieldListFromElasticSearchMapping(mapping,prefix){
     let fields:{FieldID:string,Type:string}[] = [];
     for (let property in mapping) {
-    let value = mapping[property];
-    if(value["properties"]){
-        fields = fields.concat(getFieldListFromElasticSearchMapping(value["properties"],`${prefix}${property}.`));
+        let value = mapping[property];
+        if(value["properties"]){
+            fields = fields.concat(getFieldListFromElasticSearchMapping(value["properties"],`${prefix}${property}.`));
+        }
+        else{
+            fields.push({FieldID:`${prefix}${property}`,Type:value["type"]});
+        }
     }
-    else{
-        fields.push({FieldID:`${prefix}${property}`,Type:value["type"]});
-    }
-}
-return fields;
-
+    return fields;
 }
 
 async function getSchemaFromElastic(client,dataIndexType){
@@ -90,4 +85,30 @@ async function getSchemaFromElastic(client,dataIndexType){
 
     return getFieldListFromElasticSearchMapping(index_mapping,"");
 
+}
+
+async function SaveOptionalValuesFromElastic(client, fields, dataIndexType) {
+    var papiClient = CommonMethods.getPapiClient(client);
+
+    const transactionLineFields = ["Transaction.Account.Country","Transaction.Account.State","Transaction.Account.StatusName",
+                                   "Transaction.StatusName","Transaction.Type","Item.MainCategory"];
+    const allActivitiesFields = ["Account.Country","Account.State","Account.StatusName","StatusName","Type"];
+
+    const fieldsArray = (dataIndexType == "all_activities") ? allActivitiesFields : transactionLineFields;
+
+    for(var field of fields) {
+        if(fieldsArray.includes(field.FieldID)){
+            let body = {
+                "size":"0",
+                "aggs" : {
+                    "distinct_values" : {
+                        "terms" : { "field" : field.FieldID }
+                    }
+                }
+            }
+            const res = await papiClient.post(`/elasticsearch/search/${dataIndexType}`,body);
+            const distinct_values = res["aggregations"]["distinct_values"]["buckets"].map(x => x.key);
+            field["optionalValues"] = distinct_values;
+        }
+    }
 }
