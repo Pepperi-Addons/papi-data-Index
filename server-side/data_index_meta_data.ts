@@ -90,14 +90,14 @@ async function getSchemaFromElastic(client,dataIndexType){
 async function SaveOptionalValuesFromElastic(client, fields, dataIndexType) {
     var papiClient = CommonMethods.getPapiClient(client);
 
-    const transactionLineFields = ["Transaction.Account.Country","Transaction.Account.State","Transaction.Account.StatusName",
-                                   "Transaction.StatusName","Transaction.Type","Item.MainCategory"];
-    const allActivitiesFields = ["Account.Country","Account.State","Account.StatusName","StatusName","Type"];
-
-    const fieldsArray = (dataIndexType == "all_activities") ? allActivitiesFields : transactionLineFields;
+    const multiSelectFields = {
+        "all_activities" :["Account.Country","Account.State","Account.StatusName","StatusName","Type"],
+        "transaction_lines":["Transaction.Account.Country","Transaction.Account.State","Transaction.Account.StatusName",
+                             "Transaction.StatusName","Transaction.Type","Item.MainCategory"]
+    }
 
     for(var field of fields) {
-        if(fieldsArray.includes(field.FieldID)){
+        if(multiSelectFields[dataIndexType].includes(field.FieldID)){
             let body = {
                 "size":"0",
                 "aggs" : {
