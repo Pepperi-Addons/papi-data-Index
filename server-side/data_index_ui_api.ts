@@ -58,6 +58,8 @@ async function getFields(papiClient: PapiClient) { // get the needed fields for 
         typeToFields[objectType] = fieldsObjects;
     }
 
+    typeToFields["Agent"].push({key:"Name", value:"Name"});
+
     var typeToDefaultFields = {
         "all_activities": CommonMethods.addDefaultFieldsByType([],"all_activities"),
         "transaction_lines": CommonMethods.addDefaultFieldsByType([],"transaction_lines")
@@ -121,7 +123,7 @@ function isInIgnoreList(field:string):boolean{
         'ShipToZipCode',
         'Signature',
         'TotalsBox',
-        'Type', // problematic field - changing ATD name will cause massive update in elastic and also e have problem to get update in it on PNS
+        //'Type', // problematic field - changing ATD name will cause massive update in elastic and also e have problem to get update in it on PNS
         'ModificationDateTime',
         'AccountExternalID',
         'ItemExternalID',
