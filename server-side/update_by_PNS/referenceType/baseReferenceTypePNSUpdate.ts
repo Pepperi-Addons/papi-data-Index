@@ -111,18 +111,16 @@ export class baseReferenceTypePNSUpdate extends BasePNSAction {
     {
         var fields = fields.filter(CommonMethods.distinct);
 
-        var sourceStr = this.buildTheScriptSourceString(fields, prefix, apiObj);
+        var scriptBody = this.buildScriptSourceStringAndParams(fields, prefix, apiObj);
 
         var internalIDMatch = {};
         internalIDMatch[`${prefix}.InternalID`] = apiObj["InternalID"];
 
-        if (sourceStr) {
+        if (scriptBody.source) {
             var internalIDMatch = {};
             internalIDMatch[`${prefix}.InternalID`] = apiObj["InternalID"];
             var queryBody = {
-                script: {
-                    source: sourceStr
-                },
+                script: scriptBody,
                 query: {
                     bool: {
                         must: [
@@ -137,19 +135,21 @@ export class baseReferenceTypePNSUpdate extends BasePNSAction {
         }
     }
 
-    private buildTheScriptSourceString(fields: string[], prefix: string, apiObj: any) {
+    private buildScriptSourceStringAndParams(fields: string[], prefix: string, apiObj: any) {
         //build the source str with the reference fields value
+        //now building also params
         var source = "";
+        var params = {};
         fields.forEach(field => 
         {
-            var exportedName = `${prefix}.${field}`;
-            var value = apiObj[field];
-            var valueStr = typeof value == 'string' ? `'${value}'` : "" + value;
-            var ctxSoureField = `ctx['_source']['${exportedName}']=${valueStr};`;
-            source += ctxSoureField;
-            
+            const exportedName = `${prefix}.${field}`;
+            const value = apiObj[field];
+            const valueStr = "" + value;
+            params[exportedName] = valueStr;
+            const ctxSourceField = `ctx['_source']['${exportedName}']=params['${exportedName}'];`;
+            source += ctxSourceField;
         });
-        return source;
+        return {source: source, params: params};
     }
 
 
