@@ -24,7 +24,7 @@ export async function install(client: Client, request: Request): Promise<any> {
             token: client.OAuthAccessToken,
             addonUUID: client.AddonUUID,
             addonSecretKey: client.AddonSecretKey
-        });;
+        });
         //Create the relevant meta data in the papi-adal
         var res = await papiClient.post("/bulk/data_index/rebuild/install");
 
@@ -55,13 +55,12 @@ async function createInitialDataIndexTableAdalSchemaAndData(papiClient: PapiClie
 }
 
 async function createInitialDataIndexUISchema(papiClient: PapiClient, client: Client) {
-    var body: AddonDataScheme = {
-        Name: "data_index_ui",
-        Type: "meta_data"
-    };
 
     //create data_index-adal schema
-    await papiClient.addons.data.schemes.post(body);
+    await papiClient.addons.data.schemes.post({
+        Name: "data_index_ui",
+        Type: "meta_data"
+    });
     papiClient.addons.data.uuid(client.AddonUUID).table("data_index_ui").upsert({ Key: 'meta_data' });
 }
 
@@ -79,65 +78,36 @@ async function createIndex(papiClient: PapiClient, client: Client) {
     if (numberOfShardsFlag === false) {
         numberOfShards = 1;
     }
-    const body = {
-        "Settings": {
-            "number_of_shards": numberOfShards,
-        },
-        "Mapping": {
-            "dynamic_templates": [{
-                "strings": {
-                    "match_mapping_type": "string",
-                    "mapping": { "type": "keyword" }
-                }
-            },
-            {
-                "decimals": {
-                    "match_mapping_type": "double",
-                    "mapping": { "type": "double" }
-                }
-            }
-            ],
-            "properties": {
-                "ElasticSearchType": { "type": "keyword" },
-                "ElasticSearchSubType": { "type": "keyword" },
-                "UUID": { "type": "keyword" }
-            }
+
+    await papiClient.post("/addons/data/schemes",{
+        Name: "all_activities",
+        Type: "shared_index",
+        DataSourceData:{
+        IndexName: "papi_data_index",
         }
-    };
-    await service.papiClient.post(`/addons/api/00000000-0000-0000-0000-00000e1a571c/internal/create_index?index_name=${distributorUuid}`, body, headers);
+    });
+
+    await papiClient.post("/addons/data/schemes",{
+        Name: "transaction_lines",
+        Type: "shared_index",
+        DataSourceData:{
+        IndexName: "papi_data_index",
+        }
+    });
+    
 }
 
 export async function uninstall(client: Client, request: Request): Promise<any> {
-
-    const service = new MyService(client);
-
-    var resultObject: { [k: string]: any } = {};
-    resultObject.success = true;
-    resultObject.resultObject = {};
-    try {
-        var papiClient = new PapiClient({
-            baseURL: client.BaseURL,
-            token: client.OAuthAccessToken,
-            addonUUID: client.AddonUUID,
-            addonSecretKey: client.AddonSecretKey
-        });;
-        //delete the relevant meta data in the papi-adal
-        await papiClient.post("/bulk/data_index/rebuild/uninstall");
-
-        // delete the index
-        const distributorUuid = jwtDecode(client.OAuthAccessToken)['pepperi.distributoruuid'];
-        var headers = {
-            "X-Pepperi-OwnerID": client.AddonUUID,
-            "X-Pepperi-SecretKey": client.AddonSecretKey
-        }
-        await service.papiClient.post(`/addons/api/00000000-0000-0000-0000-00000e1a571c/internal/delete_index?index_name=${distributorUuid}`, null, headers);
-
+    try{
+        const service = new MyService(client)
+        await service.papiClient.post(`/addons/data/schemes/all_activities/purge`);
+        await service.papiClient.post(`/addons/data/schemes/transaction_lines/purge`);
+        return { success: true, resultObject: {} }
     }
-    catch (e) {
-        resultObject.success = false;
-        resultObject.erroeMessage = e.message;
+    catch(err){
+        console.log('Failed to uninstall papi-data-index', err)
+        return err;
     }
-    return resultObject
 }
 
 export async function upgrade(client: Client, request: Request): Promise<any> {

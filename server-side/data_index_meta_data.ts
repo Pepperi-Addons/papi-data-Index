@@ -1,6 +1,7 @@
 import { Client, Request } from '@pepperi-addons/debug-server'
 import { CommonMethods } from './CommonMethods';
 import jwtDecode from "jwt-decode";
+import { PapiClient } from '@pepperi-addons/papi-sdk';
 
 /////function to remove - I change the interface, need to remove after a few versios
 export async function all_activities_fields(client: Client, request: Request): Promise<any> {
@@ -38,7 +39,7 @@ async function getDataIndexFields(client: Client, dataIndexType: string) {
 async function getDataIndexSchema(client: Client, dataIndexType: string) {
     var papiClient = CommonMethods.getPapiClient(client);
     
-        var schema = await getSchemaFromElastic(client,dataIndexType);
+        var schema = await getSchemaFromAdal(papiClient,dataIndexType);
 
         var ui_adalRecord = await CommonMethods.getDataIndexUIAdalRecord(papiClient,client);
         var savedFields:string[] = [];
@@ -85,6 +86,16 @@ async function getSchemaFromElastic(client,dataIndexType){
 
     return getFieldListFromElasticSearchMapping(index_mapping,"");
 
+}
+
+// dataIndexType is "all_activities" or "transaction_lines"
+async function getSchemaFromAdal(papiClient: PapiClient, dataIndexType) {
+    let schemaFields: {FieldID:string,Type:string}[] = []
+    const fieldsFromAdal = (await papiClient.get(`/addons/data/schemes/${dataIndexType}`)).Fields;
+    for (let fieldName in fieldsFromAdal) {
+        schemaFields.push({FieldID: fieldName, Type: fieldsFromAdal[fieldName].Type})
+    }
+    return schemaFields;
 }
 
 async function SaveOptionalValuesFromElastic(client, fields, dataIndexType) {

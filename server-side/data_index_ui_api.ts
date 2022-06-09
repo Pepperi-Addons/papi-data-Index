@@ -37,14 +37,15 @@ export async function get_ui_data(client: Client, request: Request) {//get the s
 
 async function getFields(papiClient: PapiClient) { // get the needed fields for the drop downs
     
-    var types = ["Transaction","Activity","Account","transaction_lines","Item","Agent"]
+    const objectTypes = ["Transaction","Activity","Account","transaction_lines","Item","Agent"]
 
-    var typeToFields:any = { }
-
-    for(var t in types){
-        var objectType = types[t];
+    var objectTypesToFields:any = {}
+    var fieldIDtoType:any = {}
+    for(var t in objectTypes){
+        var objectType = objectTypes[t];
+        fieldIDtoType[objectType] = {}
         var fieldsObjects :{key:string,value:string}[] = [];
-        var resource = CommonMethods.getAPiResourcesByObjectTypeName(types[t])[0];
+        var resource = CommonMethods.getAPiResourcesByObjectTypeName(objectTypes[t])[0];
 
         var fields = await CommonMethods.getTypesFields(papiClient,resource);
 
@@ -52,13 +53,14 @@ async function getFields(papiClient: PapiClient) { // get the needed fields for 
             if (checkIfFieldIsValid(fieldObj,objectType)) //GuidReferenceType
             {
                 fieldsObjects.push({key:fieldObj.FieldID, value:fieldObj.Label}); // the key val is the format of the pwp-select data of the UI
+                fieldIDtoType[objectType][fieldObj.FieldID] = toSchemaType(fieldObj.Format)
             }
         });
         
-        typeToFields[objectType] = fieldsObjects;
+        objectTypesToFields[objectType] = fieldsObjects;
     }
-
-    typeToFields["Agent"].push({key:"Name", value:"Name"});
+    fieldIDtoType["Agent"]["Name"] = 'String';
+    objectTypesToFields["Agent"].push({key:"Name", value:"Name"});
 
     var typeToDefaultFields = {
         "all_activities": CommonMethods.addDefaultFieldsByType([],"all_activities"),
@@ -66,9 +68,30 @@ async function getFields(papiClient: PapiClient) { // get the needed fields for 
     }
 
     return { DataIndexTypeDefaultFields: typeToDefaultFields,
-            TypesFields: typeToFields
+            TypesFields: objectTypesToFields,
+            FieldIDtoType: fieldIDtoType
         };
 
+}
+
+function toSchemaType(dataBaseType):string{
+    switch(dataBaseType) {
+        case 'String':
+        case 'Guid':
+            return 'String'
+        case 'DateTime':
+            return 'DateTime'
+        case 'Int32':
+        case 'Int64':
+            return 'Integer'
+        case 'Boolean':
+            return 'Bool'
+        case 'Double':
+        case 'Decimal':
+            return 'Double'
+        default:
+            return 'String'
+    }
 }
 
 function checkIfFieldIsValid(field:ApiFieldObject,objectType:string)
@@ -405,13 +428,16 @@ export async function save_ui_data(client: Client, request: Request) { //save th
     var papiClient = CommonMethods.getPapiClient(client);
 
     var uiData =  request.body;
-    var all_activities_fields = CommonMethods.addDefaultFieldsByType(uiData["all_activities_fields"],"all_activities");
-    var transaction_lines_fields = CommonMethods.addDefaultFieldsByType(uiData["transaction_lines_fields"],"transaction_lines");
-
+    // var all_activities_fields = CommonMethods.addDefaultFieldsByType(uiData["all_activities_fields"],"all_activities");
+    // var transaction_lines_fields = CommonMethods.addDefaultFieldsByType(uiData["transaction_lines_fields"],"transaction_lines");
+    var all_activities_fields = uiData["all_activities_fields"];
+    var transaction_lines_fields = uiData["transaction_lines_fields"];
     var ui_adalRecord = await CommonMethods.getDataIndexUIAdalRecord(papiClient,client);
 
-    ui_adalRecord["all_activities_fields"] = all_activities_fields.filter(CommonMethods.distinct);
-    ui_adalRecord["transaction_lines_fields"] = transaction_lines_fields.filter(CommonMethods.distinct);
+    // ui_adalRecord["all_activities_fields"] = all_activities_fields.filter(CommonMethods.distinct);
+    // ui_adalRecord["transaction_lines_fields"] = transaction_lines_fields.filter(CommonMethods.distinct);
+    ui_adalRecord["all_activities_fields"] = all_activities_fields.map(x => x.fieldID).filter(CommonMethods.distinct);
+    ui_adalRecord["transaction_lines_fields"] = transaction_lines_fields.map(x => x.fieldID).filter(CommonMethods.distinct);
     ui_adalRecord["RunTime"] = null;
 
     if(ui_adalRecord["FullPublish"] == undefined){
@@ -424,6 +450,24 @@ export async function save_ui_data(client: Client, request: Request) { //save th
 
         ui_adalRecord["RunTime"] = uiData["RunTime"];
     }
+
+    await papiClient.post("/addons/data/schemes",{
+        Name: "all_activities",
+        Type: "shared_index",
+        DataSourceData:{
+        IndexName: "papi_data_index",
+        },
+        Fields: buildFields(all_activities_fields)
+    });
+
+    await papiClient.post("/addons/data/schemes",{
+        Name: "transaction_lines",
+        Type: "shared_index",
+        DataSourceData:{
+        IndexName: "papi_data_index",
+        },
+        Fields: buildFields(transaction_lines_fields)
+    });
 
     return await CommonMethods.saveDataIndexUIAdalRecord(papiClient,client, ui_adalRecord) ;
 }
@@ -473,6 +517,18 @@ function checkIfFieldCanBeRemoved(field: string){
 
     // fields that ends with '.InternalID' are probably fields that the exporter added to suport reference fields, we cant remove it because we dont jave a way to know in that point if it was field chosen by the user or added by the exporter
     return !field.endsWith(".InternalID") && field != 'InternalID' && field != "UUID";
+}
+
+function buildFields(fields){
+    let schemaFields = {}
+    fields.forEach(f => {
+        schemaFields[f.fieldID] = {
+            Type: f.type,
+            Indexed: true,
+            Keyword: (f.type=='String') ? true : undefined
+        }
+    })
+    return schemaFields;
 }
 
 

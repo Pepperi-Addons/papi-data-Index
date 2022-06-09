@@ -98,16 +98,16 @@ export abstract class BasePNSAction {
     }
 
      private async upload(rowsToUpload: any[],dataIndexType:string) {
-        var fileStorage = await this.papiClient.fileStorage.tmp();
-
+        //var fileStorage = await this.papiClient.fileStorage.tmp();
+        console.log("#####upload####");
         //upload to the url
-        await fetch(fileStorage.UploadURL, {
-            method: 'PUT',
-            headers: {'Content-Type': 'application/json',"Cache-Control": "no-cache" },
-            body: JSON.stringify(rowsToUpload),
-        })
+        // await fetch(fileStorage.UploadURL, {
+        //     method: 'PUT',
+        //     headers: {'Content-Type': 'application/json',"Cache-Control": "no-cache" },
+        //     body: JSON.stringify(rowsToUpload),
+        // })
 
-        var chunkSize = 5000;
+        var chunkSize = 500;
         var start = 0;
         var totalRowsCount = rowsToUpload.length;
 
@@ -115,8 +115,9 @@ export abstract class BasePNSAction {
 
             var rows = rowsToUpload.slice(start, start + chunkSize);
 
-            var res = await this.papiClient.post(`/elasticsearch/bulk/${dataIndexType}`, { URL: fileStorage.DownloadURL });
-
+            // var res = await this.papiClient.post(`/elasticsearch/bulk/${dataIndexType}`, { URL: fileStorage.DownloadURL });
+            var res = await this.papiClient.post(`/addons/shared_index/index/papi_data_index/${this.client.AddonUUID}/batch/${dataIndexType}`, { Objects: rows });
+            console.log("batch upload result: "+ res)
             start += rows.length;
 
         }
@@ -133,14 +134,16 @@ export abstract class BasePNSAction {
                     bool: {
                         must: {
                             terms: {
-                                UUID: UUIDsToDelete
+                                Key: UUIDsToDelete
                             }
                         }
                     }
                 }
             };
 
-            var res = await this.papiClient.post(`/elasticsearch/delete/${dataIndexType}`, deleteBody);
+            //var res = await this.papiClient.post(`/elasticsearch/delete/${dataIndexType}`, deleteBody);
+            var res = await this.papiClient.post(`/addons/shared_index/index/papi_data_index/${this.client.AddonUUID}/delete/${dataIndexType}`, deleteBody);
+            
 
             var end = new Date().getTime();
     
