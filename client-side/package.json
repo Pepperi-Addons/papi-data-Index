@@ -37,7 +37,7 @@
         "@ngx-translate/core": "^13.0.0",
         "@ngx-translate/http-loader": "^6.0.0",
         "@pepperi-addons/ngx-lib": "^0.1.203",
-        "@pepperi-addons/papi-sdk": "^1.17.3",
+        "@pepperi-addons/papi-sdk": "^1.34.0",
         "@tweenjs/tween.js": "^17.1.1",
         "angular2-signaturepad": "^2.11.0",
         "disable-scroll": "^0.5.1",

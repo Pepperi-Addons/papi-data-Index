@@ -59,6 +59,7 @@ export class DataIndexComponent implements OnInit {
     fieldsNumberLimit = 20;
 
     intervalCounter = 0;// it is for delay on updating the progress by the async publish, need to wait a vit more then 10 sec
+    fieldIDtoType: any;
 
 
     constructor(
@@ -69,7 +70,7 @@ export class DataIndexComponent implements OnInit {
         public compiler: Compiler,
         public layoutService: PepLayoutService,
         public loaderService: PepLoaderService
-        ) 
+        )
 
      {
 
@@ -84,7 +85,7 @@ export class DataIndexComponent implements OnInit {
         });
 
     }
-    
+
   ngOnInit(): void {
 
     this.getUIData();
@@ -100,6 +101,7 @@ export class DataIndexComponent implements OnInit {
             var fields = uiData['Fields']; // //the fields for the dropdowns and the defaultFields
             this.defaultFields = fields['DataIndexTypeDefaultFields'];
             this.typesFields = fields['TypesFields'];
+            this.fieldIDtoType = fields['FieldIDtoType']
 
             var progressStatus = uiData['ProgressData']['Status'];
 
@@ -109,7 +111,7 @@ export class DataIndexComponent implements OnInit {
 
             this.menuOptions = [{ key: 'delete_index', text: this.translate.instant('Data_index_delete_index') ,disabled:this.rebuildInProgress}];
 
-            this.SetTransactionLinesUIData(); 
+            this.SetTransactionLinesUIData();
 
             this.SetAllActivitiesTabData();
 
@@ -186,7 +188,7 @@ export class DataIndexComponent implements OnInit {
 
             if(prefix.includes(".")){// e.g Transaction.Agent
                 objectType = prefix.substring(prefix.lastIndexOf('.')+1) // take the Agent
-            } 
+            }
 
             var apiName = field.substring(lastDotIndex + 1);
             if (this.typesFields[objectType]) //if not defined - the prefix is not supported in the ui
@@ -204,7 +206,7 @@ export class DataIndexComponent implements OnInit {
             if (fieldObj) // can be not defined or enpty array if invalid api name somehow was entered to adal record -will not be shown and new publish will remove it
             {
                 this.fields[indexType].push({ type: indexType, apiName: field, default: defaultField });
-                this.handleSpecialCases(indexType, fieldObj); 
+                this.handleSpecialCases(indexType, fieldObj);
 
             }
 
@@ -252,12 +254,11 @@ export class DataIndexComponent implements OnInit {
         }
         else if (progressStatus) {
 
-            if (progressStatus == "Failure") 
+            if (progressStatus == "Failure")
             {
                 this.progressIndicator = this.translate.instant('Data_index_failedToPublish');
                 this.indexingFaild = true;
                 this.indexingError = progressData["Message"];
-                
             }
             else
             {
@@ -286,7 +287,7 @@ export class DataIndexComponent implements OnInit {
                 }
                 else // Publish was finished
                 {
-                    this.clearProgressIndicator(); 
+                    this.clearProgressIndicator();
                 }
             }
         }
@@ -310,7 +311,7 @@ export class DataIndexComponent implements OnInit {
         for (let field of fields) {
             let key = field.key;
             if(!map.has(key)){
-                map.set(key, true);   
+                map.set(key, true);
                 distinctFields.push({
                      key: key,
                     value: field.value
@@ -338,7 +339,7 @@ export class DataIndexComponent implements OnInit {
                     this.translate.instant("Data_index_delete_index"),
                     this.translate.instant("Data_index_delete_body"),
                     this.translate.instant("Data_index_Confirm"),
-                    () =>{ 
+                    () =>{
                         this.rebuildInProgress = true;
                         this.dataIndexService.deleteIndex((res)=>{
                             if(res["success"] == true){
@@ -352,15 +353,13 @@ export class DataIndexComponent implements OnInit {
                                     () =>{
                                         this.rebuildInProgress = false;
                                         this.clearProgressIndicator();
-                                    }, 
+                                    },
                                     false
                                     );
                             }
                         });
-                       
                     }
                 );
-                
                 break;
             }
             default: {
@@ -387,8 +386,8 @@ export class DataIndexComponent implements OnInit {
     }
 
     onApiNameChange(event,rowNum, tab){
-        var self = this;       
-        var apiName = event.value; 
+        var self = this;
+        var apiName = event.value;
         self.fields[tab][rowNum].apiName = apiName;
         switch(tab)
         {
@@ -402,7 +401,7 @@ export class DataIndexComponent implements OnInit {
                     {
                         self.transaction_lines_apiNames['Transaction'].push(res[0]);
                     };
-                }  
+                }
                 break
         }
     }
@@ -410,7 +409,6 @@ export class DataIndexComponent implements OnInit {
     private delay = true;
 
     publishClicked(){
-
         //get the fields to save
         var data = {
             all_activities_fields: this.getIndexTypeFieldsToExport("all_activities"),
@@ -429,7 +427,7 @@ export class DataIndexComponent implements OnInit {
                     //add run time to saved object
                     data.RunTime = this.getFormattedRunTime(dialogResult.runTime);
                 }
-    
+
                 this.dataIndexService.publish(data,(result)=>{
                     this.indexingFaild = false;
                     this.progressIndicator = this.translate.instant('Data_index_initializing_publish');
@@ -469,8 +467,8 @@ export class DataIndexComponent implements OnInit {
             var progressStatus = uiData['ProgressData']['Status'];
             var progressData = uiData['ProgressData'];
 
-            this.rebuildInProgress = progressStatus == 'InProgress' ? true : (!progressData["RunTime"] && this.intervalCounter < 1); //the counter check is for caces the async publish didn't update the status yet (there is an old status from lat publish or it is empty on first publish) so we will wait two intervals 
-        
+            this.rebuildInProgress = progressStatus == 'InProgress' ? true : (!progressData["RunTime"] && this.intervalCounter < 1); //the counter check is for caces the async publish didn't update the status yet (there is an old status from lat publish or it is empty on first publish) so we will wait two intervals
+
             this.setProgressIndicator(progressData);
 
             if(!this.rebuildInProgress)
@@ -480,23 +478,40 @@ export class DataIndexComponent implements OnInit {
             this.intervalCounter++;
 
         });
-       
+
     }
 
     private getIndexTypeFieldsToExport(indexType: string) {
-        var fieldsToExport : string[] = [];
+        var fieldsToExport : any = [];
         this.fields[indexType].forEach(fieldObj => {
             var field = fieldObj.apiName;
             if (field != null) { // igmoe unselected api names in the UI
                 if (fieldObj.type != indexType) { // I made the key to be always the full prefix - Account in all activities and Transaction.Account in transaction_lines
                     field = `${fieldObj.type}.${field}`;
                 }
-                fieldsToExport.push(field);
+                fieldsToExport.push({fieldID: field, type: this.getFieldType(fieldObj)});
             }
         });
 
         return fieldsToExport;
 
     }
-    
+
+    private getFieldType(fieldObj){
+        let type;
+        if(fieldObj.type == "all_activities"){
+            type = this.fieldIDtoType["Activity"][fieldObj.apiName] ? this.fieldIDtoType["Activity"][fieldObj.apiName] : this.fieldIDtoType["Transaction"][fieldObj.apiName]
+        }
+        else {
+            let objectType = fieldObj.type
+            if(objectType.includes(".")){// e.g Transaction.Agent
+                objectType = objectType.substring(objectType.lastIndexOf('.')+1) // take the Agent
+            }
+            type = this.fieldIDtoType[objectType][fieldObj.apiName]
+        }
+        return type
+    }
+
+
+
 }
