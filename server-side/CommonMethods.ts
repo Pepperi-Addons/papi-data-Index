@@ -1,5 +1,6 @@
 import { PapiClient } from '@pepperi-addons/papi-sdk'
 import { Client} from '@pepperi-addons/debug-server'
+import MyService from './my.service';
 export  class CommonMethods{
 
     public static getPapiClient(client: Client) {
@@ -124,4 +125,41 @@ export  class CommonMethods{
             return await papiClient.metaData.type(resource).fields.get();
         }
     }
+
+    public  static async createIndex(papiClient: PapiClient, client: Client) {
+        const service = new MyService(client);
+        var headers = {
+            "X-Pepperi-OwnerID": client.AddonUUID,
+            "X-Pepperi-SecretKey": client.AddonSecretKey
+        }
+        const distributorUuid = jwtDecode(client.OAuthAccessToken)['pepperi.distributoruuid'];
+        const numberOfShardsFlag = await papiClient.metaData.flags.name('NumberOfShards').get();
+        let numberOfShards = numberOfShardsFlag;
+    
+        // the flag doesnt exist, the API returns "false".so im putting the default of number of shards (1)
+        if (numberOfShardsFlag === false) {
+            numberOfShards = 1;
+        }
+    
+        await papiClient.post("/addons/data/schemes",{
+            Name: "all_activities",
+            Type: "shared_index",
+            DataSourceData:{
+            IndexName: "papi_data_index",
+            }
+        });      
+    
+        await papiClient.post("/addons/data/schemes",{
+            Name: "transaction_lines",
+            Type: "shared_index",
+            DataSourceData:{
+            IndexName: "papi_data_index",
+            }
+        });
+        
+    }
+}
+
+function jwtDecode(OAuthAccessToken: string) {
+    throw new Error('Function not implemented.');
 }

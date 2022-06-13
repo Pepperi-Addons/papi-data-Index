@@ -11,6 +11,7 @@ The error Message is importent! it will be written in the audit log and help the
 import { Client, Request } from '@pepperi-addons/debug-server'
 import { AddonDataScheme, PapiClient } from '@pepperi-addons/papi-sdk'
 import jwtDecode from 'jwt-decode';
+import { CommonMethods } from './CommonMethods';
 import MyService from './my.service';
 
 export async function install(client: Client, request: Request): Promise<any> {
@@ -31,7 +32,7 @@ export async function install(client: Client, request: Request): Promise<any> {
         //Create the relevant initial meta data in the data_index addon adal
         await createInitialDataIndexTableAdalSchemaAndData(papiClient, client);
         await createInitialDataIndexUISchema(papiClient, client);
-        await createIndex(papiClient, client);
+        await CommonMethods.createIndex(papiClient, client);
 
 
     }
@@ -64,38 +65,6 @@ async function createInitialDataIndexUISchema(papiClient: PapiClient, client: Cl
     papiClient.addons.data.uuid(client.AddonUUID).table("data_index_ui").upsert({ Key: 'meta_data' });
 }
 
-async function createIndex(papiClient: PapiClient, client: Client) {
-    const service = new MyService(client);
-    var headers = {
-        "X-Pepperi-OwnerID": client.AddonUUID,
-        "X-Pepperi-SecretKey": client.AddonSecretKey
-    }
-    const distributorUuid = jwtDecode(client.OAuthAccessToken)['pepperi.distributoruuid'];
-    const numberOfShardsFlag = await papiClient.metaData.flags.name('NumberOfShards').get();
-    let numberOfShards = numberOfShardsFlag;
-
-    // the flag doesnt exist, the API returns "false".so im putting the default of number of shards (1)
-    if (numberOfShardsFlag === false) {
-        numberOfShards = 1;
-    }
-
-    await papiClient.post("/addons/data/schemes",{
-        Name: "all_activities",
-        Type: "shared_index",
-        DataSourceData:{
-        IndexName: "papi_data_index",
-        }
-    });
-
-    await papiClient.post("/addons/data/schemes",{
-        Name: "transaction_lines",
-        Type: "shared_index",
-        DataSourceData:{
-        IndexName: "papi_data_index",
-        }
-    });
-    
-}
 
 export async function uninstall(client: Client, request: Request): Promise<any> {
     try{
