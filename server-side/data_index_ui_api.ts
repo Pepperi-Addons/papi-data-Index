@@ -232,7 +232,28 @@ export async function delete_index(client: Client, request: Request) {
     await initRebuildDataADALRecord(papiClient, client,"all_activities");
     await initRebuildDataADALRecord(papiClient, client,"transaction_lines");
 
-    return await papiClient.post(`/elasticsearch/clear/data_index`);
+    result = await clearTheIndex(papiClient, client, result);
+    return result;
+}
+
+async function clearTheIndex(papiClient: PapiClient, client: Client, result: any) {
+    let al_schemes = await papiClient.get("/addons/data/schemes/all_activities");
+
+    let tl_schemes = await papiClient.get("/addons/data/schemes/transaction_lines");
+
+    let al_purge_res = await papiClient.post(`/addons/shared_index/${client.AddonUUID}/purge`, al_schemes);
+    if (al_purge_res.success) {
+        let tl_purge_res = await papiClient.post(`/addons/shared_index/${client.AddonUUID}/purge`, tl_schemes);
+        if (tl_purge_res.success) {
+            await CommonMethods.createIndex(papiClient, client);
+        } else {
+            result - tl_purge_res;
+        }
+
+    } else {
+        result = al_purge_res;
+    }
+    return result;
 }
 
 async function initRebuildDataADALRecord(papiClient: PapiClient, client: Client, dataIndexType:string) {
