@@ -241,9 +241,9 @@ async function clearTheIndex(papiClient: PapiClient, client: Client, result: any
 
     let tl_schemes = await papiClient.get("/addons/data/schemes/transaction_lines");
 
-    let al_purge_res = await papiClient.post(`/addons/shared_index/${client.AddonUUID}/purge`, al_schemes);
+    let al_purge_res = await papiClient.post(`/addons/shared_index/schemes/${client.AddonUUID}/purge`, al_schemes);
     if (al_purge_res.success) {
-        let tl_purge_res = await papiClient.post(`/addons/shared_index/${client.AddonUUID}/purge`, tl_schemes);
+        let tl_purge_res = await papiClient.post(`/addons/shared_index/schemes/${client.AddonUUID}/purge`, tl_schemes);
         if (tl_purge_res.success) {
             await CommonMethods.createIndex(papiClient, client);
         } else {
