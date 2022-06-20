@@ -38,10 +38,10 @@ export  class CommonMethods{
     public static addDefaultFieldsByType(fieldsToExport: string[],dataIndexType:string ) {
         switch (dataIndexType) {
             case "all_activities":
-                fieldsToExport.push("InternalID","UUID", "Type", "StatusName", "ActionDateTime", "Account.ExternalID", "Agent.Name");
+                fieldsToExport.push("InternalID","UUID", "Type", "StatusName", "ActionDateTime", "Account.ExternalID","Account.Name", "Agent.Name");
                 break;
             case "transaction_lines":
-                fieldsToExport.push("InternalID","UUID","Item.ExternalID", "Transaction.StatusName", "Transaction.ActionDateTime", "Transaction.Account.ExternalID","Transaction.Type","Transaction.Agent.Name");
+                fieldsToExport.push("InternalID","UUID","Item.ExternalID","Item.Name","Item.MainCategory", "Transaction.StatusName", "Transaction.ActionDateTime", "Transaction.Account.ExternalID","Transaction.Account.Name","Transaction.Type","Transaction.Agent.Name");
                 break;
         }
         return fieldsToExport;
@@ -127,12 +127,7 @@ export  class CommonMethods{
     }
 
     public  static async createIndex(papiClient: PapiClient, client: Client) {
-        const service = new MyService(client);
-        var headers = {
-            "X-Pepperi-OwnerID": client.AddonUUID,
-            "X-Pepperi-SecretKey": client.AddonSecretKey
-        }
-        const distributorUuid = jwtDecode(client.OAuthAccessToken)['pepperi.distributoruuid'];
+
         const numberOfShardsFlag = await papiClient.metaData.flags.name('NumberOfShards').get();
         let numberOfShards = numberOfShardsFlag;
     
@@ -140,26 +135,22 @@ export  class CommonMethods{
         if (numberOfShardsFlag === false) {
             numberOfShards = 1;
         }
-    
-        await papiClient.post("/addons/data/schemes",{
-            Name: "all_activities",
-            Type: "shared_index",
-            DataSourceData:{
-            IndexName: "papi_data_index",
-            }
-        });      
-    
-        await papiClient.post("/addons/data/schemes",{
-            Name: "transaction_lines",
-            Type: "shared_index",
-            DataSourceData:{
-            IndexName: "papi_data_index",
-            }
-        });
-        
+
+        await createPapiIndexSchemaNoFields(papiClient, "all_activities", numberOfShards);
+        await createPapiIndexSchemaNoFields(papiClient, "transaction_lines", numberOfShards);      
     }
 }
 
-function jwtDecode(OAuthAccessToken: string) {
-    throw new Error('Function not implemented.');
+
+
+async function createPapiIndexSchemaNoFields(papiClient: PapiClient, resourceName: string, numberOfShards: any) {
+    let res = await papiClient.post("/addons/data/schemes", {
+        Name: resourceName,
+        Type: "shared_index",
+        DataSourceData: {
+            IndexName: "papi_data_index",
+            NumberOfShards: numberOfShards
+        }
+    });
+    console.log(`create ${resourceName} schema result: ${JSON.stringify(res)}`)
 }

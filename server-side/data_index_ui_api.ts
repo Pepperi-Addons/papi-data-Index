@@ -185,7 +185,7 @@ async function getRebuildProgressData(papiClient: PapiClient, client: Client, ui
     }
     else
     {
-        allActivitiesPolling = await await papiClient.addons.api.sync().uuid(client.AddonUUID).file("data_index").func("all_activities_polling").post(); 
+        allActivitiesPolling =  await papiClient.addons.api.sync().uuid(client.AddonUUID).file("data_index").func("all_activities_polling").post(); 
         transactionLinesPolling = await papiClient.addons.api.sync().uuid(client.AddonUUID).file("data_index").func("transaction_lines_polling").post();
     }
 
@@ -471,26 +471,24 @@ export async function save_ui_data(client: Client, request: Request) { //save th
 
         ui_adalRecord["RunTime"] = uiData["RunTime"];
     }
+    
 
-    await papiClient.post("/addons/data/schemes",{
-        Name: "all_activities",
-        Type: "shared_index",
-        DataSourceData:{
-        IndexName: "papi_data_index",
-        },
-        Fields: buildFields(all_activities_fields)
-    });
+    await postPapiIndexSchemaWithFields(papiClient, "all_activities", all_activities_fields);
+    await postPapiIndexSchemaWithFields(papiClient, "transaction_lines", transaction_lines_fields);
 
-    await papiClient.post("/addons/data/schemes",{
-        Name: "transaction_lines",
-        Type: "shared_index",
-        DataSourceData:{
-        IndexName: "papi_data_index",
-        },
-        Fields: buildFields(transaction_lines_fields)
-    });
 
     return await CommonMethods.saveDataIndexUIAdalRecord(papiClient,client, ui_adalRecord) ;
+}
+
+async function postPapiIndexSchemaWithFields(papiClient: PapiClient, resourceName: string, resourceFields: any) {
+    await papiClient.post("/addons/data/schemes", {
+        Name: resourceName,
+        Type: "shared_index",
+        DataSourceData: {
+            IndexName: "papi_data_index",
+        },
+        Fields: buildFields(resourceFields)
+    });
 }
 
 export async function handle_remove_fields(client: Client, request: Request) {
@@ -551,6 +549,7 @@ function buildFields(fields){
     })
     return schemaFields;
 }
+
 
 
 /*********************************************************************************/
