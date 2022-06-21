@@ -130,7 +130,7 @@ export class baseReferenceTypePNSUpdate extends BasePNSAction {
                 }
             };
             //var res = await this.papiClient.post(`/elasticsearch/update/${this.dataIndexType}`, queryBody);
-            var res = await this.papiClient.post(`/addons/shared_index/index/papi_data_index/${this.client.AddonUUID}/update/${this.dataIndexType}`, queryBody);
+            var res = await this.papiClient.post(`/addons/shared_index/index/papi_data_index/update/${this.client.AddonUUID}/${this.dataIndexType}`, queryBody);
 
             console.log(`Prefix: ${prefix} - Update by query body ${JSON.stringify(queryBody)}`);
             console.log(`Prefix: ${prefix} - Update by query result ${JSON.stringify(res)}`);
@@ -146,8 +146,8 @@ export class baseReferenceTypePNSUpdate extends BasePNSAction {
         {
             const exportedName = `${prefix}.${field}`;
             const value = apiObj[field];
-            const valueStr = "" + value;
-            params[exportedName] = valueStr;
+            //const valueStr = "" + value;
+            params[exportedName] = value;
             const ctxSourceField = `ctx['_source']['${exportedName}']=params['${exportedName}'];`;
             source += ctxSourceField;
         });

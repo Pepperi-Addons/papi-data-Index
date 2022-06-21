@@ -9,10 +9,11 @@ The error Message is importent! it will be written in the audit log and help the
 */
 
 import { Client, Request } from '@pepperi-addons/debug-server'
-import { AddonDataScheme, PapiClient } from '@pepperi-addons/papi-sdk'
+import { AddonDataScheme, PapiClient} from '@pepperi-addons/papi-sdk'
 import jwtDecode from 'jwt-decode';
 import { CommonMethods } from './CommonMethods';
 import MyService from './my.service';
+import semver from 'semver';
 
 export async function install(client: Client, request: Request): Promise<any> {
 
@@ -33,26 +34,48 @@ export async function install(client: Client, request: Request): Promise<any> {
         await createInitialDataIndexTableAdalSchemaAndData(papiClient, client);
         await createInitialDataIndexUISchema(papiClient, client);
         await CommonMethods.createIndex(papiClient, client);
-
+        await setUsageMonitorRelation(client);
 
     }
     catch (e) {
         resultObject.success = false;
-        resultObject.erroeMessage = e.message;
+        resultObject.errorMessage = e.message;
     }
     return resultObject
 }
 
+async function setUsageMonitorRelation(client){
+    try {
+
+        const usageMonitorRelation = {
+            RelationName: "UsageMonitor",
+            Name: "Papi Data Index and queries usage data", 
+            Description: "Papi Data Index and queries usage data", 
+            Type: "AddonAPI",
+            AddonUUID: client.AddonUUID,
+            AddonRelativeURL: 'monitor/usage_data'
+        };
+       
+        const service = new MyService(client);
+        var res =  await service.upsertRelation(usageMonitorRelation);
+
+        return { success:true, resultObject: null };
+    } catch(err) {
+        return { success: false, resultObject: err };
+    }
+}
+
+
 async function createInitialDataIndexTableAdalSchemaAndData(papiClient: PapiClient, client: Client) {
     var body: AddonDataScheme = {
         Name: "data_index",
-        Type: "meta_data"
+        Type: "data"
     };
 
     //create data_index-adal schema
     await papiClient.addons.data.schemes.post(body);
-    papiClient.addons.data.uuid(client.AddonUUID).table("data_index").upsert({ Key: 'all_activities' });
-    papiClient.addons.data.uuid(client.AddonUUID).table("data_index").upsert({ Key: 'transaction_lines' });
+    await papiClient.addons.data.uuid(client.AddonUUID).table("data_index").upsert({ Key: 'all_activities' });
+    await papiClient.addons.data.uuid(client.AddonUUID).table("data_index").upsert({ Key: 'transaction_lines' });
 }
 
 async function createInitialDataIndexUISchema(papiClient: PapiClient, client: Client) {
@@ -67,19 +90,27 @@ async function createInitialDataIndexUISchema(papiClient: PapiClient, client: Cl
 
 
 export async function uninstall(client: Client, request: Request): Promise<any> {
+
+    let result = { success: true, resultObject: null };
+
     try{
         const service = new MyService(client)
-        await service.papiClient.post(`/addons/data/schemes/all_activities/purge`);
-        await service.papiClient.post(`/addons/data/schemes/transaction_lines/purge`);
-        return { success: true, resultObject: {} }
+        await service.papiClient.post("/bulk/data_index/rebuild/uninstall");
+        return result;
     }
     catch(err){
         console.log('Failed to uninstall papi-data-index', err)
-        return err;
+        return { success: false ,errorMessage: err };
     }
 }
 
 export async function upgrade(client: Client, request: Request): Promise<any> {
+    let result = { success: true, resultObject: {} };
+    if (request.body.FromVersion && semver.compare(request.body.FromVersion, '0.5.21') < 0) 
+	{
+        result.success=false;
+        result["errorMessage"] = "Upgrade to this version is not supported, please uninstall and reinstall the addon";  
+	}
     return { success: true, resultObject: {} }
 }
 
