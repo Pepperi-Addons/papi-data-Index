@@ -146,8 +146,8 @@ export class baseReferenceTypePNSUpdate extends BasePNSAction {
         {
             const exportedName = `${prefix}.${field}`;
             const value = apiObj[field];
-            const valueStr = "" + value;
-            params[exportedName] = valueStr;
+            //const valueStr = "" + value;
+            params[exportedName] = value;
             const ctxSourceField = `ctx['_source']['${exportedName}']=params['${exportedName}'];`;
             source += ctxSourceField;
         });
