@@ -237,13 +237,11 @@ export async function delete_index(client: Client, request: Request) {
 }
 
 async function clearTheIndex(papiClient: PapiClient, client: Client, result: any) {
-    let al_schemes = await papiClient.get("/addons/data/schemes/all_activities");
 
-    let tl_schemes = await papiClient.get("/addons/data/schemes/transaction_lines");
-
-    let al_purge_res = await papiClient.post(`/addons/shared_index/schemes/${client.AddonUUID}/purge`, al_schemes);
+    let al_purge_res =  await purgePapiSchema("all_activities", papiClient, client);
+    
     if (al_purge_res.success) {
-        let tl_purge_res = await papiClient.post(`/addons/shared_index/schemes/${client.AddonUUID}/purge`, tl_schemes);
+        let tl_purge_res = await purgePapiSchema("transaction_lines", papiClient, client);
         if (tl_purge_res.success) {
             await CommonMethods.createIndex(papiClient, client);
         } else {
@@ -254,6 +252,18 @@ async function clearTheIndex(papiClient: PapiClient, client: Client, result: any
         result = al_purge_res;
     }
     return result;
+}
+
+async function purgePapiSchema(resourceName: string, papiClient: PapiClient, client: Client) {
+    let schema = {
+        Name: resourceName,
+        Type: "shared_index",
+        DataSourceData: {
+            IndexName: "papi_data_index",
+        }
+    };
+
+    return await papiClient.post(`/addons/shared_index/schemes/${client.AddonUUID}/purge`, schema);
 }
 
 async function initRebuildDataADALRecord(papiClient: PapiClient, client: Client, dataIndexType:string) {

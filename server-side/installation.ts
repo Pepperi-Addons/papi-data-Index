@@ -109,7 +109,7 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
     if (request.body.FromVersion && semver.compare(request.body.FromVersion, '0.5.21') < 0) 
 	{
         result.success=false;
-        result["errorMessage"] = "Upgrade to this version is not supported, please uninstall and reinstall the addon";  
+        result["errorMessage"] = "Upgrade is not supported, please uninstall and reinstall the addon";  
 	}
     return { success: true, resultObject: {} }
 }
