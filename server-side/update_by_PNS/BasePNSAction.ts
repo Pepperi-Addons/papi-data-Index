@@ -114,8 +114,6 @@ export abstract class BasePNSAction {
         while (start < totalRowsCount) {
 
             var rows = rowsToUpload.slice(start, start + chunkSize);
-
-            // var res = await this.papiClient.post(`/elasticsearch/bulk/${dataIndexType}`, { URL: fileStorage.DownloadURL });
             var res = await this.papiClient.post(`/addons/shared_index/index/papi_data_index/batch/${this.client.AddonUUID}/${dataIndexType}`, { Objects: rows });
             console.log("batch upload result: "+ res)
             start += rows.length;
@@ -141,7 +139,6 @@ export abstract class BasePNSAction {
                 }
             };
 
-            //var res = await this.papiClient.post(`/elasticsearch/delete/${dataIndexType}`, deleteBody);
             var res = await this.papiClient.post(`/addons/shared_index/index/papi_data_index/delete/${this.client.AddonUUID}/${dataIndexType}`, deleteBody);
             
 
