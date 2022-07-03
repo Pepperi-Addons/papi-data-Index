@@ -78,6 +78,7 @@ export abstract class BasePNSAction {
                 }
                 rowsToUpload.push(apiObject);
             }
+            apiObject["Key"] = apiObject["UUID"];// add support to the user of new data index - key is mandatory
         });
         return rowsToUpload;
     }
@@ -115,7 +116,7 @@ export abstract class BasePNSAction {
 
             var rows = rowsToUpload.slice(start, start + chunkSize);
             var res = await this.papiClient.post(`/addons/shared_index/index/papi_data_index/batch/${this.client.AddonUUID}/${dataIndexType}`, { Objects: rows });
-            console.log("batch upload result: "+ res)
+            console.log("batch upload result: "+  JSON.stringify(res))
             start += rows.length;
 
         }
