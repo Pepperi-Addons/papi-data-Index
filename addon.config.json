@@ -1,6 +1,6 @@
 {
   "AddonUUID": "10979a11-d7f4-41df-8993-f06bfd778304",
-  "AddonVersion": "0.5.30",
+  "AddonVersion": "1.0.8",
   "DebugPort": 4500,
   "WebappBaseUrl": "https://app.sandbox.pepperi.com",
   "DefaultEditor": "main",
@@ -10,7 +10,8 @@
     "data_index_meta_data.ts",
     "data_index_ui_api.ts",
     "all_activities_pns.ts",
-    "transaction_lines_pns.ts"
+    "transaction_lines_pns.ts",
+    "monitor.ts"
   ],
   "Editors": [
     "main"

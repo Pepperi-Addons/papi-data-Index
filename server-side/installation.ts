@@ -35,13 +35,18 @@ export async function install(client: Client, request: Request): Promise<any> {
         await createInitialDataIndexUISchema(papiClient, client);
         await CommonMethods.createIndex(papiClient, client);
         await setUsageMonitorRelation(client);
-
+        await subscribeToDataQueryRelation(client);
     }
     catch (e) {
         resultObject.success = false;
         resultObject.errorMessage = e.message;
     }
     return resultObject
+}
+
+async function subscribeToDataQueryRelation(client: Client) {
+    await setDataQueriesRelation(client, "all_activities");
+    await setDataQueriesRelation(client, "transaction_lines", "Transaction");
 }
 
 async function setUsageMonitorRelation(client){
@@ -54,6 +59,33 @@ async function setUsageMonitorRelation(client){
             Type: "AddonAPI",
             AddonUUID: client.AddonUUID,
             AddonRelativeURL: 'monitor/usage_data'
+        };
+       
+        const service = new MyService(client);
+        var res =  await service.upsertRelation(usageMonitorRelation);
+
+        return { success:true, resultObject: null };
+    } catch(err) {
+        return { success: false, resultObject: err };
+    }
+}
+
+async function setDataQueriesRelation(client: Client,resource:string, prefix?:string){
+    try {
+        prefix = prefix? `${prefix}.`: "";
+
+        const usageMonitorRelation = {
+            RelationName: "DataQueries",
+            Name:resource, 
+            Description: `${resource} relation data`, 
+            Type: "AddonAPI",
+            AddonUUID: client.AddonUUID,
+            AddonRelativeURL: `/addons/shared_index/index/papi_data_index/search/${client.AddonUUID}/${resource}`,
+            SchemaRelativeURL:`/addons/api/${client.AddonUUID}/data_index_meta_data/${resource}_schema`,
+            AccountFieldID:"InternalID", 
+            IndexedAccountFieldID:`${prefix}Account.InternalID`,
+            UserFieldID:"InternalID", 
+            IndexedUserFieldID:`${prefix}Agent.InternalID`
         };
        
         const service = new MyService(client);
@@ -106,11 +138,13 @@ export async function uninstall(client: Client, request: Request): Promise<any> 
 
 export async function upgrade(client: Client, request: Request): Promise<any> {
     let result = { success: true, resultObject: {} };
-    if (request.body.FromVersion && semver.compare(request.body.FromVersion, '0.5.21') < 0) 
+    if (request.body.FromVersion && semver.compare(request.body.FromVersion, '0.5.30') < 0) 
 	{
         result.success=false;
         result["errorMessage"] = "Upgrade is not supported, please uninstall and reinstall the addon";  
-	}
+	}else{
+        await subscribeToDataQueryRelation(client);
+    }
     return { success: true, resultObject: {} }
 }
 
