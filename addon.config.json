@@ -42,9 +42,9 @@
       }
     ],
     "Dependencies": {
-      "papi": "9.5.500",
+      "papi": "9.5.502",
       "adal": "1.0.208",
-      "pepperi_elastic_search": "0.0.172",
+      "pepperi_elastic_search": "0.0.191",
       "pns": "1.0.62"
     }
   }

@@ -38,7 +38,6 @@ async function getDataIndexFields(client: Client, dataIndexType: string) {
 
 async function getDataIndexSchema(client: Client, dataIndexType: string) {
     var papiClient = CommonMethods.getPapiClient(client);
-    
         var schema = await getSchemaFromAdal(papiClient,dataIndexType);
 
         var ui_adalRecord = await CommonMethods.getDataIndexUIAdalRecord(papiClient,client);
@@ -117,7 +116,7 @@ async function SaveOptionalValuesFromElastic(client, fields, dataIndexType) {
                     }
                 }
             }
-            const res = await papiClient.post(`/elasticsearch/search/${dataIndexType}`,body);
+            const res = await papiClient.post(`/addons/shared_index/index/papi_data_index/search/${client.AddonUUID}/${dataIndexType}`,body);
             const distinct_values = res["aggregations"]["distinct_values"]["buckets"].map(x => x.key);
             field["optionalValues"] = distinct_values;
         }
