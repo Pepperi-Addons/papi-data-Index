@@ -38,10 +38,10 @@ export  class CommonMethods{
     public static addDefaultFieldsByType(fieldsToExport: string[],dataIndexType:string ) {
         switch (dataIndexType) {
             case "all_activities":
-                fieldsToExport.push("InternalID","UUID", "Type", "StatusName", "ActionDateTime", "Account.ExternalID","Account.Name", "Agent.Name");
+                fieldsToExport.push("InternalID","UUID", "Type", "StatusName", "ActionDateTime", "Account.UUID","Account.ExternalID","Account.Name", "Agent.Name");
                 break;
             case "transaction_lines":
-                fieldsToExport.push("InternalID","UUID","Item.ExternalID","Item.Name","Item.MainCategory", "Transaction.StatusName", "Transaction.ActionDateTime", "Transaction.Account.ExternalID","Transaction.Account.Name","Transaction.Type","Transaction.Agent.Name");
+                fieldsToExport.push("InternalID","UUID","Item.ExternalID","Item.Name","Item.MainCategory", "Transaction.StatusName", "Transaction.ActionDateTime", "Transaction.Account.UUID","Transaction.Account.ExternalID","Transaction.Account.Name","Transaction.Type","Transaction.Agent.Name");
                 break;
         }
         return fieldsToExport;
