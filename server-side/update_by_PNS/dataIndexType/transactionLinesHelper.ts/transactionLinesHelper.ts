@@ -27,6 +27,7 @@ public getRowsToUploadFromApiResult(fieldsToExport: string[], apiResult: any) {
                 if(!transactionHiddenFieldExported && apiObject["Transaction.Hidden"] !=undefined){
                     delete apiObject["Transaction.Hidden"];
                 }
+                apiObject["Key"] = apiObject["UUID"];// add support to the user of new data index - key is mandatory
                 rowsToUpload.push(apiObject);
             }
         });
