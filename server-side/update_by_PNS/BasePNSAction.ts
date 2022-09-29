@@ -76,9 +76,9 @@ export abstract class BasePNSAction {
                 if (!hiddenFieldExported) { //remove the hidden field if it not needed to be exported
                     delete apiObject["Hidden"];
                 }
+                apiObject["Key"] = apiObject["UUID"];// add support to the user of new data index - key is mandatory
                 rowsToUpload.push(apiObject);
             }
-            apiObject["Key"] = apiObject["UUID"];// add support to the user of new data index - key is mandatory
         });
         return rowsToUpload;
     }
