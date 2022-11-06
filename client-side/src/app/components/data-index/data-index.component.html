@@ -44,7 +44,7 @@
                                         </mat-icon>
                                     </button> 
                             </div>
-                            <pep-button  [disabled]="fields['all_activities'].length == fieldsNumberLimit" [value]="'Data_index_add' | translate" [iconName]="'number_plus'"
+                            <pep-button  [disabled]="fields['all_activities'].length == fieldsNumberLimit" [value]="'Data_index_add' | translate"
                             [sizeType]="'sm'" [styleType]="'strong'" [classNames]="'pull-left flip'"
                             (buttonClick)="addFieldRow('all_activities')">
                             </pep-button>  
@@ -81,7 +81,7 @@
                             </button> 
                         </div>
 
-                        <pep-button [disabled]="fields['transaction_lines'].length == fieldsNumberLimit" [value]="'Data_index_add' | translate" [iconName]="'number_plus'"
+                        <pep-button [disabled]="fields['transaction_lines'].length == fieldsNumberLimit" [value]="'Data_index_add' | translate" 
                         [sizeType]="'sm'" [styleType]="'strong'" [classNames]="'pull-left flip'"
                         (buttonClick)="addFieldRow('transaction_lines')">
                         </pep-button>  
