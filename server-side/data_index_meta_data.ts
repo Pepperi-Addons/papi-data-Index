@@ -104,7 +104,10 @@ async function SaveOptionalValuesFromElastic(client:Client, schemaFields : Schem
                 "size":"0",
                 "aggs" : {
                     "distinct_values" : {
-                        "terms" : { "field" : fieldID }
+                        "terms" : { 
+                            "field" : fieldID,
+                            "size" : "1000"
+                        }
                     }
                 }
             }
