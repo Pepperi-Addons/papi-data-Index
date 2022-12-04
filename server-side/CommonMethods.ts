@@ -127,6 +127,7 @@ export  class CommonMethods{
     }
 
     public  static async createIndex(papiClient: PapiClient, client: Client) {
+        console.log(`Recreating papi data index`)
 
         const numberOfShardsFlag = await papiClient.metaData.flags.name('NumberOfShards').get();
         let numberOfShards = numberOfShardsFlag;

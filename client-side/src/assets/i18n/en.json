@@ -11,6 +11,7 @@
     "Data_index_delete_index": "Delete the indexed data",
     "Data_index_delete_body": "Are you sure you want to delete all the indexed data?",
     "Data_index_delete_succeded": "Data deleted successfully",
+    "Data_index_delete_faild": "Data delete faild, please contact the support",
     "Data_index_processing_all_activities": "Processing activities & transactions",
     "Data_index_processing_transaction_lines": "Processing transaction lines",
     "Data_index_completed": "completed",
