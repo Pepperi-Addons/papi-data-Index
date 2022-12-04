@@ -22,8 +22,6 @@ import { PublishDialogComponent } from '../dialogs/publish-dialog.component';
 
 import { of } from "rxjs";
 import { FormArray, FormBuilder, FormGroup } from "@angular/forms";
-import { ThumbnailsMode } from "ng-gallery";
-
 
 
 @Component({
