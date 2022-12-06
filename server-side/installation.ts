@@ -150,17 +150,42 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
     }
     if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.1.4') < 0)
     {
+        result = await deleteAndRecreateTheIndex(client,request);
+    }
+    return result
+}
+
+
+
+export async function downgrade(client: Client, request: Request): Promise<any> {
+    return { success: true, resultObject: {} }
+}
+
+
+async function deleteAndRecreateTheIndex(client: Client,request: Request) {
+    let result = { success: true, resultObject: {} };
+
+    try{
         const service = new MyService(client)
         await delete_index(client,request);
         console.log("Upgrade papi data index - delete the papi data index")
         const publishRes = await service.papiClient.addons.api.uuid(client.AddonUUID).async().file("data_index_ui_api").func("publish_job").post();
         console.log(`Upgrade papi data index - rebuild papi data index - ${JSON.stringify(publishRes)}`)
     }
-    return result
-}
-
-export async function downgrade(client: Client, request: Request): Promise<any> {
-    return { success: true, resultObject: {} }
+    catch(err)
+    {
+        if (err instanceof Error)
+        {
+            console.error(`Error papi data index upgrade: ${err.message}`);
+            result.success=false;
+            result["errorMessage"] = err.message;
+        } 
+        else 
+        {
+            throw err;
+        }
+    }
+    return result;
 }
 
 
