@@ -148,7 +148,7 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
     {
         await subscribeToDataQueryRelation(client);
     }
-    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.1.4') < 0)
+    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.1.7') < 0)
     {
         result = await deleteAndRecreateTheIndex(client,request);
     }
@@ -167,7 +167,14 @@ async function deleteAndRecreateTheIndex(client: Client,request: Request) {
 
     try{
         const service = new MyService(client)
+        const al_shared_index_schema : AddonDataScheme = await service.papiClient.addons.data.schemes.name("all_activities").get();
+        const tl_shared_index_schema : AddonDataScheme = await service.papiClient.addons.data.schemes.name("transaction_lines").get();
+
         await delete_index(client,request);
+        //create the inner schemes
+        await service.papiClient.addons.data.schemes.post(al_shared_index_schema);
+        await service.papiClient.addons.data.schemes.post(tl_shared_index_schema);
+
         console.log("Upgrade papi data index - delete the papi data index")
         const publishRes = await service.papiClient.addons.api.uuid(client.AddonUUID).async().file("data_index_ui_api").func("publish_job").post();
         console.log(`Upgrade papi data index - rebuild papi data index - ${JSON.stringify(publishRes)}`)
