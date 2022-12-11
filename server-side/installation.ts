@@ -176,7 +176,7 @@ async function deleteAndRecreateTheIndex(client: Client,request: Request) {
         await service.papiClient.addons.data.schemes.post(tl_shared_index_schema);
 
         console.log("Upgrade papi data index - delete the papi data index")
-        const publishRes = await service.papiClient.addons.api.uuid(client.AddonUUID).async().file("data_index_ui_api").func("publish").post();
+        const publishRes = await service.papiClient.addons.api.uuid(client.AddonUUID).async().file("data_index_ui_api").func("publish_job").post();
         console.log(`Upgrade papi data index - rebuild papi data index - ${JSON.stringify(publishRes)}`)
     }
     catch(err)
