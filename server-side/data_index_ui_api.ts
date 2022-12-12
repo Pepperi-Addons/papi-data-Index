@@ -241,6 +241,7 @@ async function clearTheIndex(papiClient: PapiClient, client: Client, result: any
     result = {success:true};
 
     try{
+        
         await purgePapiSchema("all_activities", papiClient, client);
         await purgePapiSchema("transaction_lines", papiClient, client);
         await CommonMethods.createIndex(papiClient, client);
@@ -257,15 +258,8 @@ async function clearTheIndex(papiClient: PapiClient, client: Client, result: any
 
 async function purgePapiSchema(resourceName: string, papiClient: PapiClient, client: Client) {
     console.log(`purge ${resourceName} schema`)
-
-    let schema = {
-        Name: resourceName,
-        Type: "shared_index",
-        DataSourceData: {
-            IndexName: "papi_data_index",
-        }
-    };
-    return await papiClient.post(`/addons/data/schemes/${resourceName}/purge`);}
+    return await papiClient.post(`/addons/data/schemes/${resourceName}/purge`);
+}
 
 async function initRebuildDataADALRecord(papiClient: PapiClient, client: Client, dataIndexType:string) {
 

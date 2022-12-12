@@ -119,6 +119,12 @@ export class DataIndexComponent implements OnInit {
             if(this.progressIndicator != "" && !this.indexingFaild)
                 this.setInterval();
 
+        },
+        (error)=>{
+            this.dataIndexService.openDialog(
+                "ERROR",
+                error
+            );
         });
 
     }

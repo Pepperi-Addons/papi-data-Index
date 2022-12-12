@@ -149,7 +149,7 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
     {
         await subscribeToDataQueryRelation(client);
     }
-    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.1.9') < 0)
+    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.1.10') < 0)
     {
         result = await deleteAndRecreateTheIndex(client,request);
     }
@@ -167,7 +167,6 @@ async function deleteAndRecreateTheIndex(client: Client,request: Request) {
     let result = { success: true, resultObject: {} };
 
     try{
-
         const aa_fields = await all_activities_schema(client,request);//if publish was done once we will get fields from this call
         if(Object.keys(aa_fields).length > 0){
             const service = new MyService(client)
@@ -182,7 +181,6 @@ async function deleteAndRecreateTheIndex(client: Client,request: Request) {
             const publishRes = await service.papiClient.addons.api.uuid(client.AddonUUID).async().file("data_index_ui_api").func("publish_job").post();
             console.log(`Upgrade papi data index - rebuild papi data index - ${JSON.stringify(publishRes)}`)
         }
-        
     }
     catch(err)
     {
