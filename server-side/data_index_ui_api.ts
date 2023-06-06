@@ -237,33 +237,28 @@ export async function delete_index(client: Client, request: Request) {
 }
 
 async function clearTheIndex(papiClient: PapiClient, client: Client, result: any) {
+    console.log("Start clearing papi data index")
+    result = {success:true};
 
-    let al_purge_res =  await purgePapiSchema("all_activities", papiClient, client);
-    
-    if (al_purge_res.success) {
-        let tl_purge_res = await purgePapiSchema("transaction_lines", papiClient, client);
-        if (tl_purge_res.success) {
-            await CommonMethods.createIndex(papiClient, client);
-        } else {
-            result - tl_purge_res;
+    try{
+        
+        await purgePapiSchema("all_activities", papiClient, client);
+        await purgePapiSchema("transaction_lines", papiClient, client);
+        await CommonMethods.createIndex(papiClient, client);
+    }  catch(err){
+        result={
+            success:false,
+            erroeMessage: err
         }
 
-    } else {
-        result = al_purge_res;
     }
+
     return result;
 }
 
 async function purgePapiSchema(resourceName: string, papiClient: PapiClient, client: Client) {
-    let schema = {
-        Name: resourceName,
-        Type: "shared_index",
-        DataSourceData: {
-            IndexName: "papi_data_index",
-        }
-    };
-
-    return await papiClient.post(`/addons/shared_index/schemes/${client.AddonUUID}/purge`, schema);
+    console.log(`purge ${resourceName} schema`)
+    return await papiClient.post(`/addons/data/schemes/${resourceName}/purge`);
 }
 
 async function initRebuildDataADALRecord(papiClient: PapiClient, client: Client, dataIndexType:string) {
@@ -318,7 +313,8 @@ export async function publish(client: Client, request: Request) {
                 IsScheduled: false
             });
         }
-        
+        console.log(`Index rebuild - publish now -  calling the publish Job`);
+
         result.resultObject = await papiClient.addons.api.uuid(client.AddonUUID).async().file("data_index_ui_api").func("publish_job").post()
     }
 
@@ -380,7 +376,7 @@ export async function publish_job(client: Client, request: Request) {
         var adal_ui_data = await CommonMethods.getDataIndexUIAdalRecord(papiClient,client);
         var al_needRebuild = await checkIfDataIndexNeedRebuild(papiClient, client, "all_activities",adal_ui_data["all_activities_fields"],result.resultObject);
         var tl_needRebuild = await checkIfDataIndexNeedRebuild(papiClient, client, "transaction_lines",adal_ui_data["transaction_lines_fields"] ,result.resultObject);
-
+       
         // need to start a rebuild according to the cases
         adal_ui_data["FullPublish"] = false; // for the polling using the UI - we need to know what polling to call
 

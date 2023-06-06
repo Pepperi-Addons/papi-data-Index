@@ -10,6 +10,8 @@ The error Message is importent! it will be written in the audit log and help the
 
 import { Client, Request } from '@pepperi-addons/debug-server'
 import { AddonDataScheme, PapiClient} from '@pepperi-addons/papi-sdk'
+import {delete_index} from './data_index_ui_api'
+import {all_activities_schema} from './data_index_meta_data'
 import jwtDecode from 'jwt-decode';
 import { CommonMethods } from './CommonMethods';
 import MyService from './my.service';
@@ -142,14 +144,68 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
 	{
         result.success=false;
         result["errorMessage"] = "Upgrade is not supported, please uninstall and reinstall the addon";  
-	}else{
+	}
+    if (request.body.FromVersion && semver.compare(request.body.FromVersion, '1.0.0') < 0)
+    {
         await subscribeToDataQueryRelation(client);
     }
-    return { success: true, resultObject: {} }
+    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.1.10') < 0)
+    {
+        result = await deleteAndRecreateTheIndex(client,request);
+    }
+    return result
 }
+
+
 
 export async function downgrade(client: Client, request: Request): Promise<any> {
     return { success: true, resultObject: {} }
 }
 
+
+async function deleteAndRecreateTheIndex(client: Client,request: Request) {
+    let result = { success: true, resultObject: {} };
+
+    try{
+        const aa_fields = await all_activities_schema(client,request);//if publish was done once we will get fields from this call
+        if(Object.keys(aa_fields).length > 0){
+            const service = new MyService(client)
+            const aa_shared_index_schema : AddonDataScheme = await service.papiClient.addons.data.schemes.name("all_activities").get();
+            const tl_shared_index_schema : AddonDataScheme = await service.papiClient.addons.data.schemes.name("transaction_lines").get();
+            
+            await delete_index(client,request);
+            //create the inner schemes
+            await createInnerSchemas(aa_shared_index_schema, service, tl_shared_index_schema);
+    
+            console.log("Upgrade papi data index - delete the papi data index")
+            const publishRes = await service.papiClient.addons.api.uuid(client.AddonUUID).async().file("data_index_ui_api").func("publish_job").post();
+            console.log(`Upgrade papi data index - rebuild papi data index - ${JSON.stringify(publishRes)}`)
+        }
+    }
+    catch(err)
+    {
+        if (err instanceof Error)
+        {
+            console.error(`Error papi data index upgrade: ${err.message}`);
+            result.success=false;
+            result["errorMessage"] = err.message;
+        } 
+        else 
+        {
+            throw err;
+        }
+    }
+    return result;
+}
+
+
+async function createInnerSchemas(aa_shared_index_schema: AddonDataScheme, service: MyService, tl_shared_index_schema: AddonDataScheme) {
+    console.log(`Upgrade papi data index - recreate all activities schema: ${JSON.stringify(aa_shared_index_schema)}`);
+    const aa_result = await service.papiClient.addons.data.schemes.post(aa_shared_index_schema);
+    console.log(`Upgrade papi data index - recreate all activities result: ${JSON.stringify(aa_result)}`);
+
+    console.log(`Upgrade papi data index - recreate transaction_lines schema: ${JSON.stringify(tl_shared_index_schema)}`);
+    const tl_result = service.papiClient.addons.data.schemes.post(tl_shared_index_schema);
+    console.log(`Upgrade papi data index - recreate transaction_lines result: ${JSON.stringify(tl_result)}`);
+}
 

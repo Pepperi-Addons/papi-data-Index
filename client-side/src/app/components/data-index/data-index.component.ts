@@ -24,7 +24,6 @@ import { of } from "rxjs";
 import { FormArray, FormBuilder, FormGroup } from "@angular/forms";
 
 
-
 @Component({
   selector: 'data-index',
   templateUrl: './data-index.component.html',
@@ -120,6 +119,12 @@ export class DataIndexComponent implements OnInit {
             if(this.progressIndicator != "" && !this.indexingFaild)
                 this.setInterval();
 
+        },
+        (error)=>{
+            this.dataIndexService.openDialog(
+                "ERROR",
+                error
+            );
         });
 
     }
@@ -344,7 +349,7 @@ export class DataIndexComponent implements OnInit {
                         this.dataIndexService.deleteIndex((res)=>{
                             if(res["success"] == true){
 
-                                var message = res["success"] == true ? this.translate.instant("Data_index_delete_succeded") : res["resultObject"]["Message"];
+                                var message = res["success"] == true ? this.translate.instant("Data_index_delete_succeded") : this.translate.instant("Data_index_delete_faild");
 
                                 this.dataIndexService.openDialog(
                                     this.translate.instant("Data_index_delete_index"),
