@@ -9,7 +9,7 @@ The error Message is importent! it will be written in the audit log and help the
 */
 
 import { Client, Request } from '@pepperi-addons/debug-server'
-import { AddonDataScheme, PapiClient} from '@pepperi-addons/papi-sdk'
+import { AddonDataScheme, PapiClient, Subscription} from '@pepperi-addons/papi-sdk'
 import {delete_index} from './data_index_ui_api'
 import {all_activities_schema} from './data_index_meta_data'
 import jwtDecode from 'jwt-decode';
@@ -152,6 +152,20 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
     if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.1.10') < 0)
     {
         result = await deleteAndRecreateTheIndex(client,request);
+    }
+    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.1.12') < 0)
+    {
+        const service = new MyService(client)
+        let subsriptions: Subscription[] = await service.papiClient.notification.subscriptions.find({where:"Name in ('all_activities_pns_hidden_update','all_activities_pns_insert','all_activities_pns_update')"});
+        for( let subsription of subsriptions)
+        {
+            subsription.FilterPolicy.Resource = [
+                "activities",
+                "transactions"
+            ]
+            await service.papiClient.notification.subscriptions.upsert(subsription);
+        }
+
     }
     return result
 }
