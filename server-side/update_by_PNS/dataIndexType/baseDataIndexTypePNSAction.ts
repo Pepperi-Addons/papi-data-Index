@@ -24,7 +24,6 @@ export abstract class BaseDataIndexTypePNSAction extends BasePNSAction {
 
                     //Get from the api all the rows objects by the relevant UUIDs
                     var res = await this.getDataFromApi(UUIDs, fieldsToExport,this.dataIndexType);
-                    
                     //Loop on the object we got from the api getand get a list of object to upload to elastic 
                     var rowsToUpload: any[] = this.getRowsToUploadFromApiResult(fieldsToExport, res);
 

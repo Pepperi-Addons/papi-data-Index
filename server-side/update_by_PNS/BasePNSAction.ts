@@ -60,7 +60,7 @@ export abstract class BasePNSAction {
         var res = await this.papiClient.post(`/${apiResuorce}/search`, body);
 
         var end = new Date().getTime();
-         console.log(`Update data Index - get data from ${apiResuorce} api rows took ${end - start} ms`);
+         console.log(`Update data Index - get data from ${apiResuorce} api took ${end - start} ms. Got ${res.length} rows`);
 
         return res;
     }
@@ -80,12 +80,15 @@ export abstract class BasePNSAction {
                 rowsToUpload.push(apiObject);
             }
         });
+
+        console.log(`GetRowsToUploadFromApiResult - got ${rowsToUpload.length} rows`);
+
         return rowsToUpload;
     }
 
 
     async uploadRowsToDataIndex(rowsToUpload: any[], dataIndexType:string) {
-        
+        console.log(`uploadRowsToDataIndex - got ${rowsToUpload.length} to upload`);
         var start = new Date().getTime();
 
         if (rowsToUpload.length > 0) {
