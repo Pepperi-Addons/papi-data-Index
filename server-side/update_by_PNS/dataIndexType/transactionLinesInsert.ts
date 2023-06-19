@@ -16,9 +16,13 @@ tlHelper:TransacionLinesHelper;
             
     }
 
-    public async getDataFromApi(UUIDs: string[], fields: string[], apiResuorce : string) {
+    // public async getDataFromApi(UUIDs: string[], fields: string[], apiResuorce : string) {
+    //
+    //     return await this.tlHelper.getDataFromApi(UUIDs,fields,apiResuorce);
+    //
+    // }
 
-        return this.tlHelper.getDataFromApi(UUIDs,fields,apiResuorce);
-
+    protected getAdditionalFieldsForSearch(): string {
+        return this.tlHelper.getAdditionalFieldsForSearch();
     }
 }
