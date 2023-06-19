@@ -13,12 +13,16 @@ export class TransactionLinesUpdate extends DataIndexTypeUpdate{
 
     public getRowsToUploadFromApiResult(fieldsToExport: string[], apiResult: any) {
         return this.tlHelper.getRowsToUploadFromApiResult(fieldsToExport,apiResult);
-            
+    
     }
 
-    public async getDataFromApi(UUIDs: string[], fields: string[], apiResuorce : string) {
+    // public async getDataFromApi(UUIDs: string[], fields: string[], apiResuorce : string) {
+    // 
+    //return await this.tlHelper.getDataFromApi(UUIDs,fields,apiResuorce);
+    // 
+    //}
 
-        return await this.tlHelper.getDataFromApi(UUIDs,fields,apiResuorce);
-
+    protected getAdditionalFieldsForSearch(): string {
+        return this.tlHelper.getAdditionalFieldsForSearch();
     }
 }

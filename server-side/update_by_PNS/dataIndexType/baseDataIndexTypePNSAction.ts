@@ -20,7 +20,7 @@ export abstract class BaseDataIndexTypePNSAction extends BasePNSAction {
                 var fieldsToExport : string[] = adalRecord["RebuildData"]["FieldsToExport"];
                 if(fieldsToExport)
                 {
-                    var UUIDs = this.getUUIDs(this.pnsObjects, adalRecord);
+                    let UUIDs:string[] = this.getUUIDs(this.pnsObjects, adalRecord);
 
                     //Get from the api all the rows objects by the relevant UUIDs
                     var res = await this.getDataFromApi(UUIDs, fieldsToExport,this.dataIndexType);

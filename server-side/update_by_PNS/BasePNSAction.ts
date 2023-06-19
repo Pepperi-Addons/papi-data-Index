@@ -2,6 +2,8 @@ import { AddonData, AddonDataScheme, PapiClient } from '@pepperi-addons/papi-sdk
 import { Client } from '@pepperi-addons/debug-server'
 import { CommonMethods } from '../CommonMethods';
 import fetch from "node-fetch";
+import jwtDecode from 'jwt-decode';
+import SystemHealthService from '../system_health.service';
 
 export abstract class BasePNSAction {
 
@@ -46,23 +48,60 @@ export abstract class BasePNSAction {
 
         return UUIDs;
     }
+    protected getAdditionalFieldsForSearch(): string {
+        return ",Hidden";
+    }
 
-    public async getDataFromApi(UUIDs: string[], fields: string[], apiResuorce : string) {
+    public async getDataFromApi(UUIDs: string[], fields: string[], apiResuorce : string){
 
-        var start = new Date().getTime();
+        let start = new Date().getTime();
 
-        var body = {
-            fields: fields.join(',') + ",Hidden",
+        let body = {
+            fields: fields.join(',') + this.getAdditionalFieldsForSearch(),
             UUIDList: UUIDs,
             include_deleted: 1
         };
 
-        var res = await this.papiClient.post(`/${apiResuorce}/search`, body);
+        let res = await this.papiClient.post(`/${apiResuorce}/search`, body);
 
-        var end = new Date().getTime();
+        let end = new Date().getTime();
+
+         await this.checkPapiResults(UUIDs, res, apiResuorce);
+
          console.log(`Update data Index - get data from ${apiResuorce} api took ${end - start} ms. Got ${res.length} rows`);
 
         return res;
+    }
+
+
+    private async checkPapiResults(UUIDs: string[], res: any, apiResuorce: string) 
+    {
+        if (UUIDs.length != res.length) {//this is bad - it means the data returned from api search - is not what we expected to get - missing data
+            let err = `Update data Index - get data from ${apiResuorce} api return ${res.length} rows and we expected ${UUIDs.length} rows`;
+            console.log(`${err}, sending notification using system health`);
+
+            await this.sendAlertToPapiIndexAlertsChannel(apiResuorce, res, UUIDs);
+
+            throw new Error(err);
+        }
+    }
+
+    private async sendAlertToPapiIndexAlertsChannel(apiResuorce: string, res: any, UUIDs: string[]) {
+        let jwt = <any>jwtDecode(this.client.OAuthAccessToken);
+        const enviroment = jwt["pepperi.datacenter"];
+        const distributorUUID = jwt["pepperi.distributoruuid"];
+        let distributor: any = await this.papiClient.get("/distributor");
+
+        let name: string = `<b>${enviroment.toUpperCase()}</b> - Papi Data index PNS Error `;
+        let description: string = "Mismatch between PNS modified objects number and the data returned from Papi";
+        let message: string = `<b>Distributor:</b> ${distributor["InternalID"]} - ${distributor["Name"]}<br><b>DistUUID:</b> ${distributorUUID}<br><b>ActionUUID:</b> ${this.client.ActionUUID}<br><b>IsAsync operation: </b>${this.client.isAsync}
+            <br><b style="color:red">ERROR!</b>
+            <br>Papi search results on '${apiResuorce}' returned ${res.length} rows while we got ${UUIDs.length} modified objects by PNS. 
+            <br>No data was uploaded to data index.<br> Please check!<br>`;
+
+        let kms = await this.papiClient.get("/kms/parameters/papi_data_index_alertsUrl");
+
+        await new SystemHealthService(this.client).sendUserWebhookNotification(name, description, 'ERROR', message, "Always", kms.Value);
     }
 
     public getRowsToUploadFromApiResult(fieldsToExport: string[], apiResult: any) {
@@ -102,14 +141,7 @@ export abstract class BasePNSAction {
     }
 
      private async upload(rowsToUpload: any[],dataIndexType:string) {
-        //var fileStorage = await this.papiClient.fileStorage.tmp();
         console.log("#####upload####");
-        //upload to the url
-        // await fetch(fileStorage.UploadURL, {
-        //     method: 'PUT',
-        //     headers: {'Content-Type': 'application/json',"Cache-Control": "no-cache" },
-        //     body: JSON.stringify(rowsToUpload),
-        // })
 
         var chunkSize = 500;
         var start = 0;
@@ -154,3 +186,5 @@ export abstract class BasePNSAction {
     }
     
 }
+
+
