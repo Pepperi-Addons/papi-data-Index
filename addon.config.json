@@ -46,7 +46,8 @@
       "adal": "1.0.208",
       "pepperi_elastic_search": "1.1.24",
       "pns": "1.0.62",
-      "system_health": "1.0.132"
+      "system_health": "1.0.132",
+      "async":"1.0.146"
     }
   }
 }

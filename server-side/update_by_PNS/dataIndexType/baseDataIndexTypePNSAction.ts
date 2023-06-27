@@ -40,7 +40,7 @@ export abstract class BaseDataIndexTypePNSAction extends BasePNSAction {
             }
         }catch(e){
             resultObject.success = false;
-            resultObject.erroeMessage = e.message;
+            resultObject.errorMessage = e.message;
         }
 
         return resultObject;

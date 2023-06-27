@@ -140,6 +140,7 @@ export async function uninstall(client: Client, request: Request): Promise<any> 
 
 export async function upgrade(client: Client, request: Request): Promise<any> {
     let result = { success: true, resultObject: {} };
+    const service = new MyService(client)
     if (request.body.FromVersion && semver.compare(request.body.FromVersion, '0.5.30') < 0) 
 	{
         result.success=false;
@@ -155,7 +156,6 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
     }
     if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.1.12') < 0)
     {
-        const service = new MyService(client)
         let subsriptions: Subscription[] = await service.papiClient.notification.subscriptions.find({where:"Name in ('all_activities_pns_hidden_update','all_activities_pns_insert','all_activities_pns_update')"});
         for( let subsription of subsriptions)
         {
@@ -166,6 +166,11 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
             await service.papiClient.notification.subscriptions.upsert(subsription);
         }
 
+    }
+    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.1.13') < 0)
+    {
+        let resObj = await service.papiClient.addons.api.async().uuid(client.AddonUUID).file("data_index").func("transaction_lines_rebuild").post();
+        console.log(`transaction_lines_rebuild results: ${JSON.stringify(resObj)}, call 'bulk/data_index/rebuild/polling/transaction_lines' to see progress`);
     }
     return result
 }
