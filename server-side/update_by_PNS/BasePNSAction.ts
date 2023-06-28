@@ -90,11 +90,12 @@ export abstract class BasePNSAction {
         let jwt = <any>jwtDecode(this.client.OAuthAccessToken);
         const enviroment = jwt["pepperi.datacenter"];
         const distributorUUID = jwt["pepperi.distributoruuid"];
-        let distributor: any = await this.papiClient.get("/distributor");
+        const distributor: any = await this.papiClient.get("/distributor");
+        const isAsync: boolean = this.client.isAsync!();
 
         let name: string = `<b>${enviroment.toUpperCase()}</b> - Papi Data index PNS Error `;
         let description: string = "Mismatch between PNS modified objects number and the data returned from Papi";
-        let message: string = `<b>Distributor:</b> ${distributor["InternalID"]} - ${distributor["Name"]}<br><b>DistUUID:</b> ${distributorUUID}<br><b>ActionUUID:</b> ${this.client.ActionUUID}<br><b>IsAsync operation: </b>${this.client.isAsync}
+        let message: string = `<b>Distributor:</b> ${distributor["InternalID"]} - ${distributor["Name"]}<br><b>DistUUID:</b> ${distributorUUID}<br><b>ActionUUID:</b> ${this.client.ActionUUID}<br><b>IsAsync operation: </b>${isAsync}
             <br><b style="color:red">ERROR!</b>
             <br>Papi search results on '${apiResuorce}' returned ${res.length} rows while we got ${UUIDs.length} modified objects by PNS. 
             <br>No data was uploaded to data index.<br> Please check!<br>`;
