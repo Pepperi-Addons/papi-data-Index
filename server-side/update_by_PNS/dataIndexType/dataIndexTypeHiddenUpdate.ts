@@ -11,7 +11,7 @@ export abstract class DataIndexTypeHiddenUpdate extends BasePNSAction {
         var result: {[k: string]: any} = {};
         result.success=true;
         result.resultObject={};
-        try{
+        // try{
             
             var start = new Date().getTime();
             //Get the data index ADAL record
@@ -47,12 +47,12 @@ export abstract class DataIndexTypeHiddenUpdate extends BasePNSAction {
                     result.resultObject["HandleUnhideResult"] = await this.handleUnhideRows(unhiddenRows, fieldsToExport);
                 }
             }
-        }
-        catch(e)
-        {
-            result.success = false;
-            result.erroeMessage = e.message;
-        }
+        // }
+        // catch(e)
+        // {
+        //     result.success = false;
+        //     result.erroeMessage = e.message;
+        // }
 
         return result;
        
