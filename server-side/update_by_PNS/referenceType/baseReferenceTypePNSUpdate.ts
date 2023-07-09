@@ -17,8 +17,8 @@ export class baseReferenceTypePNSUpdate extends BasePNSAction {
         var resultObject: {[k: string]: any} = {};
         resultObject.success=true;
         resultObject.resultObject={};
-        try
-        {
+        // try
+        // {
             var start = new Date().getTime();
 
             //Get the data index ADAL record
@@ -79,12 +79,12 @@ export class baseReferenceTypePNSUpdate extends BasePNSAction {
             var end = new Date().getTime();
             console.log(`Update data Index ${this.dataIndexType} reference '${this.referenceApiType}' rows took in total ${end - start} ms`);
 
-        }
-        catch(e)
-        {
-            resultObject.success = false;
-            resultObject.erroeMessage = e.message;
-        }
+        // }
+        // catch(e)
+        // {
+        //     resultObject.success = false;
+        //     resultObject.erroeMessage = e.message;
+        // }
 
         return resultObject;
     }

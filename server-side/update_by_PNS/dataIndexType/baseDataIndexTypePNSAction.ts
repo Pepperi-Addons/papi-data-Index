@@ -10,7 +10,7 @@ export abstract class BaseDataIndexTypePNSAction extends BasePNSAction {
         var resultObject: {[k: string]: any} = {};
         resultObject.success=true;
         resultObject.resultObject={};
-        try{
+        // try{
             
             var start = new Date().getTime();
             //Get the data index ADAL record
@@ -38,10 +38,10 @@ export abstract class BaseDataIndexTypePNSAction extends BasePNSAction {
 
                 }
             }
-        }catch(e){
-            resultObject.success = false;
-            resultObject.errorMessage = e.message;
-        }
+        // }catch(e){
+        //     resultObject.success = false;
+        //     resultObject.errorMessage = e.message;
+        // }
 
         return resultObject;
 
