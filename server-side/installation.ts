@@ -168,8 +168,8 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
     }
     if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.1.13') < 0)
     {
-        let resObj = await service.papiClient.addons.api.async().uuid(client.AddonUUID).file("data_index").func("transaction_lines_rebuild").post();
-        console.log(`transaction_lines_rebuild results: ${JSON.stringify(resObj)}, call 'bulk/data_index/rebuild/polling/transaction_lines' to see progress`);
+        let resObj = await service.papiClient.addons.api.async().uuid(client.AddonUUID).file("data_index").func("full_index_rebuild").post();
+        console.log(`full-index_rebuild results: ${JSON.stringify(resObj)}, call 'data_index/full_index_rebuild_polling' to see progress`);
     }
     return result
 }

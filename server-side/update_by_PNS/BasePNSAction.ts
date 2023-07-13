@@ -79,19 +79,23 @@ export abstract class BasePNSAction {
         if (UUIDs.length != res.length) {//this is bad - it means the data returned from api search - is not what we expected to get - missing data
             let err = `Update data Index - get data from ${apiResuorce} api return ${res.length} rows and we expected ${UUIDs.length} rows`;
             console.log(`${err}, sending notification using system health`);
+            
+            const isAsync: boolean = this.client.isAsync!();
 
-            await this.sendAlertToPapiIndexAlertsChannel(apiResuorce, res, UUIDs);
-
-            throw new Error(err);
+            await this.sendAlertToPapiIndexAlertsChannel(apiResuorce, res, UUIDs,isAsync);
+            if(!isAsync) 
+            {// in the async operation of the PNS I want that if we got some rows these rows will be uploded
+            // so we will have somthing untill we will run rebuild or somthing in case of true error 
+                throw new Error(err);
+            }
         }
     }
 
-    private async sendAlertToPapiIndexAlertsChannel(apiResuorce: string, res: any, UUIDs: string[]) {
+    private async sendAlertToPapiIndexAlertsChannel(apiResuorce: string, res: any, UUIDs: string[], isAsync:boolean) {
         let jwt = <any>jwtDecode(this.client.OAuthAccessToken);
         const enviroment = jwt["pepperi.datacenter"];
         const distributorUUID = jwt["pepperi.distributoruuid"];
         const distributor: any = await this.papiClient.get("/distributor");
-        const isAsync: boolean = this.client.isAsync!();
 
         let name: string = `<b>${enviroment.toUpperCase()}</b> - Papi Data index PNS Error `;
         let description: string = "Mismatch between PNS modified objects number and the data returned from Papi";
