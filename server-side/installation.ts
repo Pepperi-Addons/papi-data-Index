@@ -166,7 +166,7 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
         }
 
     }
-    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.1.13') < 0)
+    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.1.19') < 0)
     {
         let resObj = await service.papiClient.addons.api.async().uuid(client.AddonUUID).file("data_index").func("full_index_rebuild").post();
         console.log(`full-index_rebuild results: ${JSON.stringify(resObj)}, call 'data_index/full_index_rebuild_polling' to see progress`);
