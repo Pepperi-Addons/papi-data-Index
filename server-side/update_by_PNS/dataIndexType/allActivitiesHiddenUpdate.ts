@@ -54,7 +54,8 @@ export  class AllActivitiesHiddenUpdate extends DataIndexTypeHiddenUpdate {
                 if(tlFieldsToExport)
                 {
                     //get from API the transaction lines by the tranasaction internalID (not uuid because we have a partition on Transaction.InternalID)
-                    var tlRowsToUpload = await this.papiClient.get(`/transaction_lines?where=Transaction.InternalID in (${InternalIDsStr})&fields=${tlFieldsToExport.join(",")}`);
+                    let tlRows = await this.papiClient.get(`/transaction_lines?where=Transaction.InternalID in (${InternalIDsStr})&fields=${tlFieldsToExport.join(",")}`);
+                    let tlRowsToUpload = this.getRowsToUploadFromApiResult(tlFieldsToExport,tlRows);
                     await this.uploadRowsToDataIndex(tlRowsToUpload,"transaction_lines");
                 }
             }
