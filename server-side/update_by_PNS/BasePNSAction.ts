@@ -76,7 +76,10 @@ export abstract class BasePNSAction {
 
     private async checkPapiResults(UUIDs: string[], res: any, apiResuorce: string) 
     {
+
         if (UUIDs.length != res.length) {//this is bad - it means the data returned from api search - is not what we expected to get - missing data
+            console.log(`Update data Index - get data from ${apiResuorce} api return ${JSON.stringify(res)}`);
+            
             let err = `Update data Index - get data from ${apiResuorce} api return ${res.length} rows and we expected ${UUIDs.length} rows`;
 
             let missingUUIDs: string[] = this.getMissingUUIDs(res, UUIDs);
