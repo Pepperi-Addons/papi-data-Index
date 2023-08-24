@@ -78,8 +78,13 @@ export abstract class BasePNSAction {
     {
         if (UUIDs.length != res.length) {//this is bad - it means the data returned from api search - is not what we expected to get - missing data
             let err = `Update data Index - get data from ${apiResuorce} api return ${res.length} rows and we expected ${UUIDs.length} rows`;
-            console.log(`${err}, sending notification using system health`);
-            
+
+            let missingUUIDs: string[] = this.getMissingUUIDs(res, UUIDs);
+
+            console.log(`${err}. The missing UUIDs are ${JSON.stringify(missingUUIDs)}`);
+
+            console.log(`Sending notification alert using system health`);
+
             const isAsync: boolean = this.client.isAsync!();
 
             await this.sendAlertToPapiIndexAlertsChannel(apiResuorce, res, UUIDs,isAsync);
@@ -89,6 +94,21 @@ export abstract class BasePNSAction {
                 throw new Error(err);
             }
         }
+    }
+
+    private getMissingUUIDs(res: any, UUIDs: string[]): string[] {
+        let UUIDToPAPIRow: { [key: string]: any; } = {};
+        res.map((obj) => {
+            UUIDToPAPIRow[obj["UUID"]] = true;
+        });
+        let missingUUIDs: string[] = [];
+        UUIDs.forEach(UUID => {
+            if (!UUIDToPAPIRow[UUID]) {
+                missingUUIDs.push(UUID);
+            }
+
+        });
+        return missingUUIDs;
     }
 
     private async sendAlertToPapiIndexAlertsChannel(apiResuorce: string, res: any, UUIDs: string[], isAsync:boolean) {
@@ -125,7 +145,7 @@ export abstract class BasePNSAction {
             }
         });
 
-        console.log(`GetRowsToUploadFromApiResult - got ${rowsToUpload.length} rows`);
+        console.log(`GetRowsToUploadFromApiResult - got ${rowsToUpload.length} rows after removing hidden rows (got originaly ${apiResult.length} rows)`);
 
         return rowsToUpload;
     }
