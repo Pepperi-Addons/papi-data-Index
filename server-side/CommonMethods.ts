@@ -35,13 +35,14 @@ export  class CommonMethods{
         return fieldsToSubscribe;
     }
 
+    //{refPrefix}.InternalID fields was added because of DI-25191
     public static addDefaultFieldsByType(fieldsToExport: string[],dataIndexType:string ) {
         switch (dataIndexType) {
             case "all_activities":
-                fieldsToExport.push("InternalID","UUID", "Type", "StatusName", "ActionDateTime", "Account.UUID","Account.ExternalID","Account.Name", "Agent.Name");
+                fieldsToExport.push("InternalID","UUID", "Type", "StatusName", "ActionDateTime", "Account.InternalID","Account.UUID","Account.ExternalID","Account.Name", "Agent.InternalID","Agent.Name");
                 break;
             case "transaction_lines":
-                fieldsToExport.push("InternalID","UUID","Item.ExternalID","Item.Name","Item.MainCategory", "Transaction.StatusName", "Transaction.ActionDateTime", "Transaction.Account.UUID","Transaction.Account.ExternalID","Transaction.Account.Name","Transaction.Type","Transaction.Agent.Name");
+                fieldsToExport.push("InternalID","UUID","Item.InternalID","Item.ExternalID","Item.Name","Item.MainCategory", "Transaction.InternalID","Transaction.StatusName", "Transaction.ActionDateTime", "Transaction.Account.InternalID","Transaction.Account.UUID","Transaction.Account.ExternalID","Transaction.Account.Name","Transaction.Type","Transaction.Agent.InternalID","Transaction.Agent.Name");
                 break;
         }
         return fieldsToExport;
