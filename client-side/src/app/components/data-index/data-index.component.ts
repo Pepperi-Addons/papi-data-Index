@@ -55,7 +55,7 @@ export class DataIndexComponent implements OnInit {
         "transaction_lines":[]
     }
 
-    fieldsNumberLimit = 20;
+    fieldsNumberLimit = 30;
 
     intervalCounter = 0;// it is for delay on updating the progress by the async publish, need to wait a vit more then 10 sec
     fieldIDtoType: any;
