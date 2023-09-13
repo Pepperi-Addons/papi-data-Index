@@ -56,7 +56,7 @@ export class PNSSubscribeHelper{
                 Name: `${subscribeDetails["Insert"]["AddonPath"]}_${subscribeDetails["Insert"]["FunctionName"]}`,// name=file_functionName
                 Type: "data",
                 FilterPolicy: {
-                        Resource: this.dataIndexType == "all_activities"? ["actvities","transactions"] : [this.dataIndexType],
+                        Resource: this.dataIndexType == "all_activities"? ["activities","transactions"] : [this.dataIndexType],
                         Action:["insert"],
                         AddonUUID:["00000000-0000-0000-0000-00000000c07e"] // to get only nucleus changes
                 },

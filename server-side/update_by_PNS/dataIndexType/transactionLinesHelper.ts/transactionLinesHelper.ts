@@ -31,25 +31,31 @@ public getRowsToUploadFromApiResult(fieldsToExport: string[], apiResult: any) {
                 rowsToUpload.push(apiObject);
             }
         });
+
+        console.log(`GetRowsToUploadFromApiResult - got ${rowsToUpload.length} rows`);
+
         return rowsToUpload;
     }
-
-    public async getDataFromApi(UUIDs: string[], fields: string[], apiResuorce : string) {
-
-        var start = new Date().getTime();
-
-        var body = {
-            fields: fields.join(',') + ",Hidden,Transaction.Hidden",
-            UUIDList: UUIDs,
-            include_deleted: 1
-        };
-
-        var res = await this.papiClient.post(`/${apiResuorce}/search`, body);
-
-        var end = new Date().getTime();
-         console.log(`Update data Index - get data from ${apiResuorce} api rows took ${end - start} ms`);
-
-        return res;
+    public getAdditionalFieldsForSearch(): string {
+        return ",Hidden,Transaction.Hidden";
     }
+
+    // public async getDataFromApi(UUIDs: string[], fields: string[], apiResuorce : string) {
+
+    //     var start = new Date().getTime();
+
+    //     var body = {
+    //         fields: fields.join(',') + ",Hidden,Transaction.Hidden",
+    //         UUIDList: UUIDs,
+    //         include_deleted: 1
+    //     };
+
+    //     var res = await this.papiClient.post(`/${apiResuorce}/search`, body);
+
+    //     var end = new Date().getTime();
+    //      console.log(`Update data Index - get data from ${apiResuorce} api took ${end - start} ms. Got ${res.length} rows`);
+
+    //     return res;
+    // }
 
 }

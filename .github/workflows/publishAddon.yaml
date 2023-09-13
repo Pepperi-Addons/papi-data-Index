@@ -3,7 +3,7 @@ name: PublishAddon
 on:
   push:
     branches:
-      - papi-data-index-1.1
+     - release/**
 
 jobs:
   publish-addon:

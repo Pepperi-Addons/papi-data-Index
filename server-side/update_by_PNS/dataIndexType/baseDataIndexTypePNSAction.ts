@@ -10,7 +10,7 @@ export abstract class BaseDataIndexTypePNSAction extends BasePNSAction {
         var resultObject: {[k: string]: any} = {};
         resultObject.success=true;
         resultObject.resultObject={};
-        try{
+        // try{
             
             var start = new Date().getTime();
             //Get the data index ADAL record
@@ -20,11 +20,10 @@ export abstract class BaseDataIndexTypePNSAction extends BasePNSAction {
                 var fieldsToExport : string[] = adalRecord["RebuildData"]["FieldsToExport"];
                 if(fieldsToExport)
                 {
-                    var UUIDs = this.getUUIDs(this.pnsObjects, adalRecord);
+                    let UUIDs:string[] = this.getUUIDs(this.pnsObjects, adalRecord);
 
                     //Get from the api all the rows objects by the relevant UUIDs
                     var res = await this.getDataFromApi(UUIDs, fieldsToExport,this.dataIndexType);
-                    
                     //Loop on the object we got from the api getand get a list of object to upload to elastic 
                     var rowsToUpload: any[] = this.getRowsToUploadFromApiResult(fieldsToExport, res);
 
@@ -39,10 +38,10 @@ export abstract class BaseDataIndexTypePNSAction extends BasePNSAction {
 
                 }
             }
-        }catch(e){
-            resultObject.success = false;
-            resultObject.erroeMessage = e.message;
-        }
+        // }catch(e){
+        //     resultObject.success = false;
+        //     resultObject.errorMessage = e.message;
+        // }
 
         return resultObject;
 
