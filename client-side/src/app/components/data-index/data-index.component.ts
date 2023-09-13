@@ -148,7 +148,8 @@ export class DataIndexComponent implements OnInit {
 
         this.transaction_lines_apiNames["transaction_lines"]= this.typesFields["transaction_lines"];
         this.transaction_lines_apiNames["Item"] = this.typesFields["Item"];
-        this.transaction_lines_apiNames["Transaction"] = this.transaction_lines_apiNames["Transaction"] ? this.transaction_lines_apiNames["Transaction"] : [];
+        this.transaction_lines_apiNames["Transaction"] = this.transaction_lines_apiNames["Transaction"] ? 
+        this.transaction_lines_apiNames["Transaction"].sort((a, b) => {return a.value < b.value ? -1 : 1;}) : [];
         this.transaction_lines_apiNames["Transaction.Account"] = this.typesFields["Account"];
         this.transaction_lines_apiNames["Transaction.Agent"] = this.typesFields["Agent"];
 
