@@ -16,6 +16,25 @@ export  class CommonMethods{
             return self.indexOf(value) === index;
     }
 
+    public static sortFieldsByValue(fields: {key:string, value:string}[]):{key:string, value:string}[]
+    {
+       fields.sort((a, b) => {
+            let compareResult = 0;
+            const aVal = a.value.toLowerCase();
+            const bVal = b.value.toLowerCase();
+
+            if(aVal < bVal){
+                compareResult =  -1
+            }
+            else if(aVal > bVal){
+
+                compareResult=1;
+            }
+            return compareResult;
+        });
+        return fields;
+    }
+
     public static collectFieldsToSubscribeToOnTheApiResource(fieldsData: any) {
         var fieldsToSubscribe: string[] = [];
         for (var prefix in fieldsData) {

@@ -60,9 +60,8 @@ async function getFields(papiClient: PapiClient) { // get the needed fields for 
 
         HandleObjectTypeDefaults(objectType, fieldIDtoType, fieldsObjects);
 
-        objectTypesToFields[objectType] = fieldsObjects.sort((a, b) => {
-            return a.value < b.value ? -1 : 1;
-        });;
+        objectTypesToFields[objectType] = CommonMethods.sortFieldsByValue(fieldsObjects)
+        
     }
 
     var typeToDefaultFields = {
