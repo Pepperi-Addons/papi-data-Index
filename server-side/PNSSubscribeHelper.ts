@@ -288,6 +288,7 @@ export class PNSSubscribeHelper{
                 referenceObjectTypeName = fieldParts[i - 2]; // if the field is Transaction.Account.InternalID - so it will be 'Transaction' 
                 apiResources = CommonMethods.getAPiResourcesByObjectTypeName(referenceObjectTypeName);
                 fieldData = { FieldName: `${referenceType}InternalID`, RefPrefix: fieldPrefix, RefResources: refResources} ;
+                fieldPrefix = referenceObjectTypeName; // if the field is Transaction.Account.InternalID, the AccountInternalID is field on Transaction and not on Transaction.Account
             }
         }
         else 
