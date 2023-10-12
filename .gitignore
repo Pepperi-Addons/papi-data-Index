@@ -1,4 +1,5 @@
-publish/**
+publish/api
+publish/editors
 node_modules/**
 build/**
 var_sk
