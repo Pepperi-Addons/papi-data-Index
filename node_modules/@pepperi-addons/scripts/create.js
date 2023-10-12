@@ -66,6 +66,13 @@ async function run(options) {
 
         config.AddonUUID = options.uuid;
         
+        const appConfigPath = path.join(cwd, 'client-side/src/app/app.config.ts');
+        const appConfig = fs.readFileSync(appConfigPath);
+        if (appConfig) {
+            const newContent = appConfig.toString().replace('[ADDON_UUID]', options.uuid);
+            await writeFile(newContent, appConfigPath);
+        } 
+
         await Promise.all([
             writeFile(JSON.stringify(config, null, 2), configPath),
             writeFile(secretKey, secretPath)

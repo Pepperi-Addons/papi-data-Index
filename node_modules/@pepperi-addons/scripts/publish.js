@@ -87,7 +87,7 @@ function getFiles(config) {
             // replace ts with js
             let file;
             if (config.PublishConfig && config.PublishConfig.ClientStack && config.PublishConfig.ClientStack === 'ng10'){
-                file = 'main.js';
+                file = editor + '.js';
             }
             else {
                 file = editor + '.plugin.bundle.js';
