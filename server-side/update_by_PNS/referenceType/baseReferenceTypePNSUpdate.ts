@@ -184,7 +184,11 @@ export class baseReferenceTypePNSUpdate extends BasePNSAction {
                     {
                         fullFieldName = this.getReferenceFullFieldName(fullFieldName, fieldName);
                         this.InsertToPrefixesFieldDict(prefixToApiFields, prefix, fullFieldName);
-                        this.getPrefixToApiFields(referencePrefixesData, prefix,field["RefPrefix"],field["RefResource"], prefixToApiFields,referenceTypes);
+                        var resources = field["RefResource"]? [field["RefResource"]]: field["RefResources"];
+                        resources.forEach(resource => {
+                            this.getPrefixToApiFields(referencePrefixesData, prefix,field["RefPrefix"],resource, prefixToApiFields,referenceTypes);
+   
+                        });
                     }
         
                 });
