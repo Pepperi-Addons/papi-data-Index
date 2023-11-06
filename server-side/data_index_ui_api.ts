@@ -169,7 +169,8 @@ function isInIgnoreList(field:string):boolean{
         'SetName',
         'SpecialOfferLeadingOrderPortfolioItemUUID',
         'UOM',
-        'Archive'
+        'Archive',
+        'DeliveryDate'
     ]
 
     return fieldsToIgnoe.includes(field);
