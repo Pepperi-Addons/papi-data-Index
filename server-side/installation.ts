@@ -166,13 +166,7 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
         }
 
     }
-    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.1.19') < 0) 
-    {
-        let resObj  = await service.papiClient.addons.api.uuid(client.AddonUUID).async().file("data_index").func("full_index_rebuild").post()
-        console.log(`full-index_rebuild results: ${JSON.stringify(resObj)}, call 'data_index/full_index_rebuild_polling' to see progress`);
-        
-    }
-    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.2.17') < 0) 
+    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.2.18') < 0) 
     {
         let resObj  = await service.papiClient.addons.api.uuid(client.AddonUUID).async().file("data_index").func("full_index_rebuild").post()
         console.log(`full-index_rebuild results: ${JSON.stringify(resObj)}, call 'data_index/full_index_rebuild_polling' to see progress`);
