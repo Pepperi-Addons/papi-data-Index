@@ -168,14 +168,13 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
     }
     if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.1.19') < 0) 
     {
-        let resObj = await service.papiClient.addons.api.async().uuid(client.AddonUUID).file("data_index").func("full_index_rebuild").post();
+        let resObj  = await service.papiClient.addons.api.uuid(client.AddonUUID).async().file("data_index").func("full_index_rebuild").post()
         console.log(`full-index_rebuild results: ${JSON.stringify(resObj)}, call 'data_index/full_index_rebuild_polling' to see progress`);
         
     }
     if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.2.17') < 0) 
     {
-        await AddAgentUUIDFieldsToFieldsToExport(service, client);
-        let resObj = await service.papiClient.addons.api.async().uuid(client.AddonUUID).file("data_index").func("full_index_rebuild").post();
+        let resObj  = await service.papiClient.addons.api.uuid(client.AddonUUID).async().file("data_index").func("full_index_rebuild").post()
         console.log(`full-index_rebuild results: ${JSON.stringify(resObj)}, call 'data_index/full_index_rebuild_polling' to see progress`);
         await subscribeToDataQueryRelation(client);
 
@@ -184,15 +183,6 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
 }
 
 
-
-async function AddAgentUUIDFieldsToFieldsToExport(service: MyService, client: Client) {
-    let uiAdalRecord = await CommonMethods.getDataIndexUIAdalRecord(service.papiClient, client);
-    uiAdalRecord["all_activities_fields"].push("Agent.UUID");
-    uiAdalRecord["transaction_lines_fields"].push("Transaction.Agent.UUID");
-    uiAdalRecord["all_activities_fields"] = uiAdalRecord["all_activities_fields"].filter(CommonMethods.distinct);
-    uiAdalRecord["transaction_lines_fields"] = uiAdalRecord["transaction_lines_fields"].filter(CommonMethods.distinct);
-    uiAdalRecord = await CommonMethods.saveDataIndexUIAdalRecord(service.papiClient, client, uiAdalRecord);
-}
 
 export async function downgrade(client: Client, request: Request): Promise<any> {
     return { success: true, resultObject: {} }
