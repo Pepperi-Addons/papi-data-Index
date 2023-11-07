@@ -58,10 +58,10 @@ export  class CommonMethods{
     public static addDefaultFieldsByType(fieldsToExport: string[],dataIndexType:string ) {
         switch (dataIndexType) {
             case "all_activities":
-                fieldsToExport.push("InternalID","UUID", "Type", "StatusName", "ActionDateTime", "Account.InternalID","Account.UUID","Account.ExternalID","Account.Name", "Agent.InternalID","Agent.Name");
+                fieldsToExport.push("InternalID","UUID", "Type", "StatusName", "ActionDateTime", "Account.InternalID","Account.UUID","Account.ExternalID","Account.Name", "Agent.InternalID","Agent.Name","Agent.UUID");
                 break;
             case "transaction_lines":
-                fieldsToExport.push("InternalID","UUID","Item.InternalID","Item.ExternalID","Item.Name","Item.MainCategory", "Transaction.InternalID","Transaction.StatusName", "Transaction.ActionDateTime", "Transaction.Account.InternalID","Transaction.Account.UUID","Transaction.Account.ExternalID","Transaction.Account.Name","Transaction.Type","Transaction.Agent.InternalID","Transaction.Agent.Name");
+                fieldsToExport.push("InternalID","UUID","Item.InternalID","Item.ExternalID","Item.Name","Item.MainCategory", "Transaction.InternalID","Transaction.StatusName", "Transaction.ActionDateTime", "Transaction.Account.InternalID","Transaction.Account.UUID","Transaction.Account.ExternalID","Transaction.Account.Name","Transaction.Type","Transaction.Agent.InternalID","Transaction.Agent.UUID","Transaction.Agent.Name");
                 break;
         }
         return fieldsToExport;

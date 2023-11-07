@@ -84,10 +84,10 @@ async function setDataQueriesRelation(client: Client,resource:string, prefix?:st
             AddonUUID: client.AddonUUID,
             AddonRelativeURL: `/addons/shared_index/index/papi_data_index/search/${client.AddonUUID}/${resource}`,
             SchemaRelativeURL:`/addons/api/${client.AddonUUID}/data_index_meta_data/${resource}_schema`,
-            AccountFieldID:"InternalID", 
-            IndexedAccountFieldID:`${prefix}Account.InternalID`,
-            UserFieldID:"InternalID", 
-            IndexedUserFieldID:`${prefix}Agent.InternalID`
+            AccountFieldID:"UUID", 
+            IndexedAccountFieldID:`${prefix}Account.UUID`,
+            UserFieldID:"UUID", 
+            IndexedUserFieldID:`${prefix}Agent.UUID`
         };
        
         const service = new MyService(client);
@@ -166,10 +166,18 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
         }
 
     }
-    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.1.19') < 0 || request.body.FromVersion && semver.compare(request.body.FromVersion, '1.2.14') < 0) 
+    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.1.19') < 0) 
     {
         let resObj = await service.papiClient.addons.api.async().uuid(client.AddonUUID).file("data_index").func("full_index_rebuild").post();
         console.log(`full-index_rebuild results: ${JSON.stringify(resObj)}, call 'data_index/full_index_rebuild_polling' to see progress`);
+        
+    }
+    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.2.15') < 0) 
+    {
+        let resObj = await service.papiClient.addons.api.async().uuid(client.AddonUUID).file("data_index").func("full_index_rebuild").post();
+        console.log(`full-index_rebuild results: ${JSON.stringify(resObj)}, call 'data_index/full_index_rebuild_polling' to see progress`);
+        await subscribeToDataQueryRelation(client);
+
     }
     return result
 }
