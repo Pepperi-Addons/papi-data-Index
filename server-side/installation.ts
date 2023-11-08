@@ -165,9 +165,12 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
             await papiClient.notification.subscriptions.upsert(subsription);
         }
     }
-    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.2.24') < 0) 
+    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.2.27') < 0) 
     {
-        await AddAgentUUIDToSchemas(papiClient, client);
+        // we must add it to shared index schema - so it will be indexed on the elastic (these happen when publishing from the Ui)
+        //also need to add it to the data_index_ui - so it will be in that all_activities_fields and transaction_lines_fields 
+        await addAgentUUIDToSchemas(papiClient, client);
+        
         let resObj  = await papiClient.addons.api.uuid(client.AddonUUID).async().file("data_index").func("full_index_rebuild").post()
         console.log(`full-index_rebuild results: ${JSON.stringify(resObj)}, call 'data_index/full_index_rebuild_polling' to see progress`);
         await subscribeToDataQueryRelation(client);
@@ -176,7 +179,7 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
 }
 
 
-async function AddAgentUUIDToSchemas(papiClient: PapiClient, client: Client) {
+async function addAgentUUIDToSchemas(papiClient: PapiClient, client: Client) {
     await addAgentUUIDFieldToSchema(papiClient, "all_activities", "Agent.UUID");
     await addAgentUUIDFieldToSchema(papiClient, "transaction_lines", "Transaction.Agent.UUID");
 
