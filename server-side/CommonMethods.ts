@@ -55,6 +55,7 @@ export  class CommonMethods{
     }
 
     //{refPrefix}.InternalID fields was added because of DI-25191
+    //Agent.UUID fields was added to support data quereis on buyers (from users adal table)
     public static addDefaultFieldsByType(fieldsToExport: string[],dataIndexType:string ) {
         switch (dataIndexType) {
             case "all_activities":
