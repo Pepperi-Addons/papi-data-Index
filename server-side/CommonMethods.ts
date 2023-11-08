@@ -58,7 +58,7 @@ export  class CommonMethods{
     public static addDefaultFieldsByType(fieldsToExport: string[],dataIndexType:string ) {
         switch (dataIndexType) {
             case "all_activities":
-                fieldsToExport.push("InternalID","UUID", "Type", "StatusName", "ActionDateTime", "Account.InternalID","Account.UUID","Account.ExternalID","Account.Name", "Agent.InternalID","Agent.Name","Agent.UUID");
+                fieldsToExport.push("InternalID","UUID", "Type", "StatusName", "ActionDateTime", "Account.InternalID","Account.UUID","Account.ExternalID","Account.Name", "Agent.InternalID","Agent.UUID","Agent.Name");
                 break;
             case "transaction_lines":
                 fieldsToExport.push("InternalID","UUID","Item.InternalID","Item.ExternalID","Item.Name","Item.MainCategory", "Transaction.InternalID","Transaction.StatusName", "Transaction.ActionDateTime", "Transaction.Account.InternalID","Transaction.Account.UUID","Transaction.Account.ExternalID","Transaction.Account.Name","Transaction.Type","Transaction.Agent.InternalID","Transaction.Agent.UUID","Transaction.Agent.Name");
@@ -66,7 +66,6 @@ export  class CommonMethods{
         }
         return fieldsToExport;
     }
-
 
     public static getAPiResourcesByObjectTypeName(objectTypeName: string):string[] {
 
@@ -161,8 +160,6 @@ export  class CommonMethods{
         await createPapiIndexSchemaNoFields(papiClient, "transaction_lines", numberOfShards);      
     }
 }
-
-
 
 async function createPapiIndexSchemaNoFields(papiClient: PapiClient, resourceName: string, numberOfShards: any) {
     let res = await papiClient.post("/addons/data/schemes", {
