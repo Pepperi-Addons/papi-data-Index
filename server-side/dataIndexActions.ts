@@ -78,7 +78,7 @@ export  class DataIndexActions{
     async handleRebuildStatus(adalRecord:any)
     {
         var status = adalRecord["RebuildData"]["Status"];
-        if(status == "Success" || status == "Failure")// Not checking inProgress because we have the startes status and retry status that equal to in progress
+        if(status == "Success" || status == "Failure")// Not checking inProgress because we have the started status and retry status that equal to in progress
         {
             await this.unscheduledPollingCodeJob(adalRecord);
         }
