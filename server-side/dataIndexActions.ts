@@ -78,7 +78,7 @@ export  class DataIndexActions{
     async handleRebuildStatus(adalRecord:any)
     {
         var status = adalRecord["RebuildData"]["Status"];
-        if(status != "InProgress")
+        if(status == "Success" || status == "Failure")
         {
             await this.unscheduledPollingCodeJob(adalRecord);
         }

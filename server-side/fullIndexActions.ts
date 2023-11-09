@@ -14,7 +14,7 @@ export  class FullIndexActions extends DataIndexActions
     {
         var rebuildData = adalRecord["RebuildData"];
         var status = rebuildData["Status"] ;
-        if(status != "InProgress")
+        if(status == "Success" || status == "Failure")
         {
             if(status == "Success")
             { 
