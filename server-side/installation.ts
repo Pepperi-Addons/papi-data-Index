@@ -16,6 +16,7 @@ import jwtDecode from 'jwt-decode';
 import { CommonMethods } from './CommonMethods';
 import MyService from './my.service';
 import semver from 'semver';
+import { promises } from 'dns';
 
 export async function install(client: Client, request: Request): Promise<any> {
 
@@ -179,32 +180,39 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
 }
 
 
-async function addAgentUUIDToSchemas(papiClient: PapiClient, client: Client) {
-    await addAgentUUIDFieldToSchema(papiClient, "all_activities", "Agent.UUID");
-    await addAgentUUIDFieldToSchema(papiClient, "transaction_lines", "Transaction.Agent.UUID");
+async function addAgentUUIDToSchemas(papiClient: PapiClient, client: Client): Promise<void> {
+    const alSchema = await addAgentUUIDFieldToSchema(papiClient, "all_activities", "Agent.UUID");
+    if(alSchema){
+        await addAgentUUIDFieldToSchema(papiClient, "transaction_lines", "Transaction.Agent.UUID");
+    }
 
     let uiSchema = await CommonMethods.getDataIndexUIAdalRecord(papiClient, client);
-    if (!uiSchema["all_activities_fields"].find((field) => field == "Agent.UUID")) {
+    if (uiSchema["all_activities_fields"] && !uiSchema["all_activities_fields"].find((field) => field == "Agent.UUID")) {
         uiSchema["all_activities_fields"].push("Agent.UUID");
+
+        if (uiSchema["transaction_lines_fields"] && !uiSchema["transaction_lines_fields"].find((field) => field == "Transaction.Agent.UUID")) {
+            uiSchema["transaction_lines_fields"].push("Transaction.Agent.UUID");
+        }
+        await CommonMethods.saveDataIndexUIAdalRecord(papiClient, client, uiSchema);
     }
-    if (!uiSchema["transaction_lines_fields"].find((field) => field == "Transaction.Agent.UUID")) {
-        uiSchema["transaction_lines_fields"].push("Transaction.Agent.UUID");
-    }
-    await CommonMethods.saveDataIndexUIAdalRecord(papiClient, client, uiSchema);
+    
 }
 
-async function addAgentUUIDFieldToSchema(papiClient: PapiClient, resouceName: string, agentUUIDField: string) {
+async function addAgentUUIDFieldToSchema(papiClient: PapiClient, resouceName: string, agentUUIDField: string) : Promise<AddonDataScheme|null> {
     let schema = await papiClient.addons.data.schemes.name(resouceName).get();
 
-    let fields = schema.Fields ? schema.Fields : {};
+    if(schema?.Fields){ // if no schema or no fields - no need to add the field because they never did export to papi data index
+        let fields = schema.Fields ? schema.Fields : {};
 
-    fields[agentUUIDField] = {
-        Type: "String",
-        Indexed: true,
-        Keyword: true
-    };
-
-    const res = await papiClient.addons.data.schemes.post(schema);
+        fields[agentUUIDField] = {
+            Type: "String",
+            Indexed: true,
+            Keyword: true
+        };
+        schema.Fields = fields;
+        return await papiClient.addons.data.schemes.post(schema);
+    }
+    return null;
 }
 
 export async function downgrade(client: Client, request: Request): Promise<any> {
