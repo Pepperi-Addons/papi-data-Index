@@ -21,7 +21,7 @@ export abstract class BasePNSAction {
         this.pnsObjects = inPnsObject["Message"]["ModifiedObjects"];
 
         console.log(`inPnsObject ${JSON.stringify(inPnsObject)}`)
-        console.log(`PnsObjects ${JSON.stringify(this.pnsObjects)}`)
+        //console.log(`PnsObjects ${JSON.stringify(this.pnsObjects)}`)
 
     }
 
