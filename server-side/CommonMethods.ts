@@ -16,6 +16,25 @@ export  class CommonMethods{
             return self.indexOf(value) === index;
     }
 
+    public static sortFieldsByValue(fields: {key:string, value:string}[]):{key:string, value:string}[]
+    {
+       fields.sort((a, b) => {
+            let compareResult = 0;
+            const aVal = a.value.toLowerCase();
+            const bVal = b.value.toLowerCase();
+
+            if(aVal < bVal){
+                compareResult =  -1
+            }
+            else if(aVal > bVal){
+
+                compareResult=1;
+            }
+            return compareResult;
+        });
+        return fields;
+    }
+
     public static collectFieldsToSubscribeToOnTheApiResource(fieldsData: any) {
         var fieldsToSubscribe: string[] = [];
         for (var prefix in fieldsData) {
@@ -35,18 +54,19 @@ export  class CommonMethods{
         return fieldsToSubscribe;
     }
 
+    //{refPrefix}.InternalID fields was added because of DI-25191
+    //Agent.UUID fields was added to support data quereis on buyers (from users adal table)
     public static addDefaultFieldsByType(fieldsToExport: string[],dataIndexType:string ) {
         switch (dataIndexType) {
             case "all_activities":
-                fieldsToExport.push("InternalID","UUID", "Type", "StatusName", "ActionDateTime", "Account.UUID","Account.ExternalID","Account.Name", "Agent.Name");
+                fieldsToExport.push("InternalID","UUID", "Type", "StatusName", "ActionDateTime", "Account.InternalID","Account.UUID","Account.ExternalID","Account.Name", "Agent.InternalID","Agent.UUID","Agent.Name");
                 break;
             case "transaction_lines":
-                fieldsToExport.push("InternalID","UUID","Item.ExternalID","Item.Name","Item.MainCategory", "Transaction.StatusName", "Transaction.ActionDateTime", "Transaction.Account.UUID","Transaction.Account.ExternalID","Transaction.Account.Name","Transaction.Type","Transaction.Agent.Name");
+                fieldsToExport.push("InternalID","UUID","Item.InternalID","Item.ExternalID","Item.Name","Item.MainCategory", "Transaction.InternalID","Transaction.StatusName", "Transaction.ActionDateTime", "Transaction.Account.InternalID","Transaction.Account.UUID","Transaction.Account.ExternalID","Transaction.Account.Name","Transaction.Type","Transaction.Agent.InternalID","Transaction.Agent.UUID","Transaction.Agent.Name");
                 break;
         }
         return fieldsToExport;
     }
-
 
     public static getAPiResourcesByObjectTypeName(objectTypeName: string):string[] {
 
@@ -141,8 +161,6 @@ export  class CommonMethods{
         await createPapiIndexSchemaNoFields(papiClient, "transaction_lines", numberOfShards);      
     }
 }
-
-
 
 async function createPapiIndexSchemaNoFields(papiClient: PapiClient, resourceName: string, numberOfShards: any) {
     let res = await papiClient.post("/addons/data/schemes", {

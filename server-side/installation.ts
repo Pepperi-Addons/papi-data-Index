@@ -16,6 +16,7 @@ import jwtDecode from 'jwt-decode';
 import { CommonMethods } from './CommonMethods';
 import MyService from './my.service';
 import semver from 'semver';
+import { promises } from 'dns';
 
 export async function install(client: Client, request: Request): Promise<any> {
 
@@ -84,10 +85,10 @@ async function setDataQueriesRelation(client: Client,resource:string, prefix?:st
             AddonUUID: client.AddonUUID,
             AddonRelativeURL: `/addons/shared_index/index/papi_data_index/search/${client.AddonUUID}/${resource}`,
             SchemaRelativeURL:`/addons/api/${client.AddonUUID}/data_index_meta_data/${resource}_schema`,
-            AccountFieldID:"InternalID", 
-            IndexedAccountFieldID:`${prefix}Account.InternalID`,
-            UserFieldID:"InternalID", 
-            IndexedUserFieldID:`${prefix}Agent.InternalID`
+            AccountFieldID:"UUID", 
+            IndexedAccountFieldID:`${prefix}Account.UUID`,
+            UserFieldID:"UUID", 
+            IndexedUserFieldID:`${prefix}Agent.UUID`
         };
        
         const service = new MyService(client);
@@ -140,7 +141,7 @@ export async function uninstall(client: Client, request: Request): Promise<any> 
 
 export async function upgrade(client: Client, request: Request): Promise<any> {
     let result = { success: true, resultObject: {} };
-    const service = new MyService(client)
+    const papiClient = CommonMethods.getPapiClient(client)
     if (request.body.FromVersion && semver.compare(request.body.FromVersion, '0.5.30') < 0) 
 	{
         throw new Error("Upgrade is not supported, please uninstall and reinstall the addon");
@@ -155,26 +156,64 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
     }
     if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.1.12') < 0)
     {
-        let subsriptions: Subscription[] = await service.papiClient.notification.subscriptions.find({where:"Name in ('all_activities_pns_hidden_update','all_activities_pns_insert','all_activities_pns_update')"});
+        let subsriptions: Subscription[] = await papiClient.notification.subscriptions.find({where:"Name in ('all_activities_pns_hidden_update','all_activities_pns_insert','all_activities_pns_update')"});
         for( let subsription of subsriptions)
         {
             subsription.FilterPolicy.Resource = [
                 "activities",
                 "transactions"
             ]
-            await service.papiClient.notification.subscriptions.upsert(subsription);
+            await papiClient.notification.subscriptions.upsert(subsription);
         }
-
     }
-    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.1.19') < 0)
+    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.2.27') < 0) 
     {
-        let resObj = await service.papiClient.addons.api.async().uuid(client.AddonUUID).file("data_index").func("full_index_rebuild").post();
+        // we must add it to shared index schema - so it will be indexed on the elastic (these happen when publishing from the Ui)
+        //also need to add it to the data_index_ui - so it will be in that all_activities_fields and transaction_lines_fields 
+        await addAgentUUIDToSchemas(papiClient, client);
+        
+        let resObj  = await papiClient.addons.api.uuid(client.AddonUUID).async().file("data_index").func("full_index_rebuild").post()
         console.log(`full-index_rebuild results: ${JSON.stringify(resObj)}, call 'data_index/full_index_rebuild_polling' to see progress`);
+        await subscribeToDataQueryRelation(client);
     }
     return result
 }
 
 
+async function addAgentUUIDToSchemas(papiClient: PapiClient, client: Client): Promise<void> {
+    const alSchema = await addAgentUUIDFieldToSchema(papiClient, "all_activities", "Agent.UUID");
+    if(alSchema){
+        await addAgentUUIDFieldToSchema(papiClient, "transaction_lines", "Transaction.Agent.UUID");
+    }
+
+    let uiSchema = await CommonMethods.getDataIndexUIAdalRecord(papiClient, client);
+    if (uiSchema["all_activities_fields"] && !uiSchema["all_activities_fields"].find((field) => field == "Agent.UUID")) {
+        uiSchema["all_activities_fields"].push("Agent.UUID");
+
+        if (uiSchema["transaction_lines_fields"] && !uiSchema["transaction_lines_fields"].find((field) => field == "Transaction.Agent.UUID")) {
+            uiSchema["transaction_lines_fields"].push("Transaction.Agent.UUID");
+        }
+        await CommonMethods.saveDataIndexUIAdalRecord(papiClient, client, uiSchema);
+    }
+    
+}
+
+async function addAgentUUIDFieldToSchema(papiClient: PapiClient, resouceName: string, agentUUIDField: string) : Promise<AddonDataScheme|null> {
+    let schema = await papiClient.addons.data.schemes.name(resouceName).get();
+
+    if(schema?.Fields){ // if no schema or no fields - no need to add the field because they never did export to papi data index
+        let fields = schema.Fields ? schema.Fields : {};
+
+        fields[agentUUIDField] = {
+            Type: "String",
+            Indexed: true,
+            Keyword: true
+        };
+        schema.Fields = fields;
+        return await papiClient.addons.data.schemes.post(schema);
+    }
+    return null;
+}
 
 export async function downgrade(client: Client, request: Request): Promise<any> {
     return { success: true, resultObject: {} }

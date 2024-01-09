@@ -49,18 +49,20 @@ async function getFields(papiClient: PapiClient) { // get the needed fields for 
 
         var fields = await CommonMethods.getTypesFields(papiClient,resource);
 
+        
         fields.forEach(fieldObj => {
-            if (checkIfFieldIsValid(fieldObj,objectType)) //GuidReferenceType
+            if (checkIfFieldIsValid(fieldObj)) //GuidReferenceType
             {
                 fieldsObjects.push({key:fieldObj.FieldID, value:fieldObj.Label}); // the key val is the format of the pwp-select data of the UI
                 fieldIDtoType[objectType][fieldObj.FieldID] = toSchemaType(fieldObj.Format)
             }
         });
+
+        HandleObjectTypeDefaults(objectType, fieldIDtoType, fieldsObjects);
+
+        objectTypesToFields[objectType] = CommonMethods.sortFieldsByValue(fieldsObjects)
         
-        objectTypesToFields[objectType] = fieldsObjects;
     }
-    fieldIDtoType["Agent"]["Name"] = 'String';
-    objectTypesToFields["Agent"].push({key:"Name", value:"Name"});
 
     var typeToDefaultFields = {
         "all_activities": CommonMethods.addDefaultFieldsByType([],"all_activities"),
@@ -72,6 +74,13 @@ async function getFields(papiClient: PapiClient) { // get the needed fields for 
             FieldIDtoType: fieldIDtoType
         };
 
+}
+
+function HandleObjectTypeDefaults(objectType: string, fieldIDtoType: any, fieldsObjects: any) {
+    if (objectType == "Agent") {
+        fieldIDtoType["Agent"]["Name"] = 'String';
+        fieldsObjects.push({ key: "Name", value: "Name" });
+    }
 }
 
 function toSchemaType(dataBaseType):string{
@@ -94,7 +103,7 @@ function toSchemaType(dataBaseType):string{
     }
 }
 
-function checkIfFieldIsValid(field:ApiFieldObject,objectType:string)
+function checkIfFieldIsValid(field:ApiFieldObject)
 {
     
     var valid = true;
@@ -160,7 +169,8 @@ function isInIgnoreList(field:string):boolean{
         'SetName',
         'SpecialOfferLeadingOrderPortfolioItemUUID',
         'UOM',
-        'Archive'
+        'Archive',
+        'DeliveryDate'
     ]
 
     return fieldsToIgnoe.includes(field);
@@ -331,7 +341,7 @@ async function setPublishCodeJob(UI_adalRecord: AddonData, papiClient: PapiClien
 
     if (codeJobUUID) 
     {
-        codeJob = await papiClient.codeJobs.get(codeJobUUID);
+        codeJob = await papiClient.codeJobs.uuid(codeJobUUID).find();
     }
     console.log(`Index rebuild - setting the publish job to run with cron  ${cronExpression}`);
 
@@ -455,14 +465,11 @@ export async function save_ui_data(client: Client, request: Request) { //save th
     var papiClient = CommonMethods.getPapiClient(client);
 
     var uiData =  request.body;
-    // var all_activities_fields = CommonMethods.addDefaultFieldsByType(uiData["all_activities_fields"],"all_activities");
-    // var transaction_lines_fields = CommonMethods.addDefaultFieldsByType(uiData["transaction_lines_fields"],"transaction_lines");
+
     var all_activities_fields = uiData["all_activities_fields"];
     var transaction_lines_fields = uiData["transaction_lines_fields"];
     var ui_adalRecord = await CommonMethods.getDataIndexUIAdalRecord(papiClient,client);
 
-    // ui_adalRecord["all_activities_fields"] = all_activities_fields.filter(CommonMethods.distinct);
-    // ui_adalRecord["transaction_lines_fields"] = transaction_lines_fields.filter(CommonMethods.distinct);
     ui_adalRecord["all_activities_fields"] = all_activities_fields.map(x => x.fieldID).filter(CommonMethods.distinct);
     ui_adalRecord["transaction_lines_fields"] = transaction_lines_fields.map(x => x.fieldID).filter(CommonMethods.distinct);
     ui_adalRecord["RunTime"] = null;
@@ -552,12 +559,26 @@ function buildFields(fields){
             Indexed: true,
             Keyword: (f.type=='String') ? true : undefined
         }
+        if(f.fieldID.includes('.')){
+            handleRefFields(f, schemaFields);   
+        }
     })
     return schemaFields;
 }
 
 
-
+function handleRefFields(f: any, schemaFields: {}) {
+    let splitedField = f.fieldID.split('.');
+    splitedField[splitedField.length - 1] = 'InternalID'; // put internalID in the last plase so Agent.Name will become Agent.InternalID
+    const RefInternalIDFields = splitedField.join('.');
+    if (!schemaFields[RefInternalIDFields]) // if not already contains the {refPrefix}.InternalID - add it to the schema fields
+    {
+        schemaFields[f.fieldID] = {
+            Type: 'Integer',
+            Indexed: true
+        };
+    }
+}
 /*********************************************************************************/
 
 

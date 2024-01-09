@@ -55,7 +55,7 @@ export class DataIndexComponent implements OnInit {
         "transaction_lines":[]
     }
 
-    fieldsNumberLimit = 20;
+    fieldsNumberLimit = 30;
 
     intervalCounter = 0;// it is for delay on updating the progress by the async publish, need to wait a vit more then 10 sec
     fieldIDtoType: any;
@@ -153,6 +153,8 @@ export class DataIndexComponent implements OnInit {
         this.transaction_lines_apiNames["Transaction.Agent"] = this.typesFields["Agent"];
 
         this.setTabFields("transaction_lines");
+
+
     }
 
     private SetAllActivitiesTabData() {
@@ -163,7 +165,7 @@ export class DataIndexComponent implements OnInit {
 
         ];
 
-        var transaction_activities_fields = this.typesFields["Transaction"].concat(this.typesFields["Activity"]);
+        var transaction_activities_fields = this.sortFieldsByValue(this.typesFields["Transaction"].concat(this.typesFields["Activity"]));
         this.all_activities_apiNames = {
             "all_activities": this.getDistinctFieldsObj(transaction_activities_fields),
             "Account": this.typesFields["Account"] ,
@@ -171,6 +173,32 @@ export class DataIndexComponent implements OnInit {
         };
 
         this.setTabFields("all_activities");
+
+        this.sortTransactionFieldsForTLTab();
+
+    }
+
+    private sortTransactionFieldsForTLTab() {
+       this.transaction_lines_apiNames["Transaction"] = this.sortFieldsByValue(this.transaction_lines_apiNames["Transaction"]);
+    }
+    
+    
+    private sortFieldsByValue(fields){
+        fields.sort((a, b) => {
+            let compareResult = 0;
+            const aVal = a.value.toLowerCase();
+            const bVal = b.value.toLowerCase();
+
+            if(aVal < bVal){
+                compareResult =  -1
+            }
+            else if(aVal > bVal){
+
+                compareResult=1;
+            }
+            return compareResult;
+        });
+        return fields;
     }
 
     private setTabFields(indexType: string) {
